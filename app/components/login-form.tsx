@@ -27,7 +27,7 @@ export function LoginForm() {
       <input
         id="email"
         className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
-        defaultValue="sophy@student.edu"
+        defaultValue="sophymengkorng@gmail.com"
         type="email"
       />
 
@@ -37,7 +37,7 @@ export function LoginForm() {
       <input
         id="password"
         className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
-        defaultValue="classwork"
+        defaultValue="Aa168168"
         type="password"
       />
 
