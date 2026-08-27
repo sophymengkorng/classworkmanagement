@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ClassFlow Student Automation",
+  title: "Class Student Automation",
   description: "Student classwork automation dashboard for schedules, assignments, documents, and reminders.",
 };
 

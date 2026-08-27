@@ -20,10 +20,10 @@ export function AppShell({ children, title, eyebrow }: { children: ReactNode; ti
     <main className="min-h-screen bg-[#f6f4ee] text-[#1d2026]">
       <div className="grid min-h-screen lg:grid-cols-[260px_1fr]">
         <aside className="border-b border-black/10 bg-[#24312f] px-5 py-5 text-white lg:border-b-0 lg:border-r lg:border-white/10 lg:py-6">
-          <Link href="/dashboard" className="flex items-center justify-between gap-4 lg:block" aria-label="ClassFlow dashboard">
+          <Link href="/dashboard" className="flex items-center justify-between gap-4 lg:block" aria-label="Class Student Automation dashboard">
             <div>
               <p className="text-sm font-medium text-teal-100">Student Assistant</p>
-              <h1 className="mt-1 text-2xl font-semibold">ClassFlow</h1>
+              <h1 className="mt-1 text-2xl font-semibold">Class</h1>
             </div>
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-lg font-bold text-[#24312f]">
               SA
