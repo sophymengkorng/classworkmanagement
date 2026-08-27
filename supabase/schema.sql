@@ -6,8 +6,10 @@ create table if not exists public.tasks (
   teacher text not null,
   deadline date not null,
   description text not null default 'No description added yet.',
-  status text not null default 'Pending' check (status in ('Pending', 'In progress', 'Completed')),
-  priority text not null default 'Medium' check (priority in ('High', 'Medium', 'Low')),
+  status text not null default 'Pending'
+    check (status in ('Pending', 'In progress', 'Completed')),
+  priority text not null default 'Medium'
+    check (priority in ('High', 'Medium', 'Low')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -23,84 +25,154 @@ create table if not exists public.documents (
   uploaded_at timestamptz not null default now()
 );
 
+grant select, insert, update, delete
+on table public.tasks
+to authenticated;
+
+grant select, insert, update, delete
+on table public.documents
+to authenticated;
+
 alter table public.tasks enable row level security;
+
 alter table public.documents enable row level security;
 
-drop policy if exists "Users can read their own tasks" on public.tasks;
+drop policy if exists "Users can read their own tasks"
+on public.tasks;
+
 create policy "Users can read their own tasks"
-on public.tasks for select
+on public.tasks
+for select
 to authenticated
-using (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can create their own tasks" on public.tasks;
+drop policy if exists "Users can create their own tasks"
+on public.tasks;
+
 create policy "Users can create their own tasks"
-on public.tasks for insert
+on public.tasks
+for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can update their own tasks" on public.tasks;
+drop policy if exists "Users can update their own tasks"
+on public.tasks;
+
 create policy "Users can update their own tasks"
-on public.tasks for update
+on public.tasks
+for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+)
+with check (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can delete their own tasks" on public.tasks;
+drop policy if exists "Users can delete their own tasks"
+on public.tasks;
+
 create policy "Users can delete their own tasks"
-on public.tasks for delete
+on public.tasks
+for delete
 to authenticated
-using (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can read their own documents" on public.documents;
+drop policy if exists "Users can read their own documents"
+on public.documents;
+
 create policy "Users can read their own documents"
-on public.documents for select
+on public.documents
+for select
 to authenticated
-using (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can create their own documents" on public.documents;
+drop policy if exists "Users can create their own documents"
+on public.documents;
+
 create policy "Users can create their own documents"
-on public.documents for insert
+on public.documents
+for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can update their own documents" on public.documents;
+drop policy if exists "Users can update their own documents"
+on public.documents;
+
 create policy "Users can update their own documents"
-on public.documents for update
+on public.documents
+for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+)
+with check (
+  auth.uid() = user_id
+);
 
-drop policy if exists "Users can delete their own documents" on public.documents;
+drop policy if exists "Users can delete their own documents"
+on public.documents;
+
 create policy "Users can delete their own documents"
-on public.documents for delete
+on public.documents
+for delete
 to authenticated
-using (auth.uid() = user_id);
+using (
+  auth.uid() = user_id
+);
 
-insert into storage.buckets (id, name, public)
-values ('student-documents', 'student-documents', false)
+insert into storage.buckets (
+  id,
+  name,
+  public
+)
+values (
+  'student-documents',
+  'student-documents',
+  false
+)
 on conflict (id) do nothing;
 
-drop policy if exists "Users can read their own stored documents" on storage.objects;
+drop policy if exists "Users can read their own stored documents"
+on storage.objects;
+
 create policy "Users can read their own stored documents"
-on storage.objects for select
+on storage.objects
+for select
 to authenticated
 using (
   bucket_id = 'student-documents'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
-drop policy if exists "Users can upload their own stored documents" on storage.objects;
+drop policy if exists "Users can upload their own stored documents"
+on storage.objects;
+
 create policy "Users can upload their own stored documents"
-on storage.objects for insert
+on storage.objects
+for insert
 to authenticated
 with check (
   bucket_id = 'student-documents'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
-drop policy if exists "Users can update their own stored documents" on storage.objects;
+drop policy if exists "Users can update their own stored documents"
+on storage.objects;
+
 create policy "Users can update their own stored documents"
-on storage.objects for update
+on storage.objects
+for update
 to authenticated
 using (
   bucket_id = 'student-documents'
@@ -111,12 +183,14 @@ with check (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
-drop policy if exists "Users can delete their own stored documents" on storage.objects;
+drop policy if exists "Users can delete their own stored documents"
+on storage.objects;
+
 create policy "Users can delete their own stored documents"
-on storage.objects for delete
+on storage.objects
+for delete
 to authenticated
 using (
   bucket_id = 'student-documents'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
-

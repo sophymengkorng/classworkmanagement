@@ -1,34 +1,51 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseAnonKey, supabaseUrl } from "./app/lib/supabase/config";
+
+import {
+  supabasePublishableKey,
+  supabaseUrl,
+} from "./app/lib/supabase/config";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabasePublishableKey) {
     return response;
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabasePublishableKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
 
-        response = NextResponse.next({
-          request,
-        });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
 
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+          response = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(
+            ({ name, value, options }) => {
+              response.cookies.set(
+                name,
+                value,
+                options
+              );
+            }
+          );
+        },
       },
-    },
-  });
+    }
+  );
 
   await supabase.auth.getUser();
 
@@ -36,6 +53,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
-
