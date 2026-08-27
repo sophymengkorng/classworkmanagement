@@ -3,19 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
 import { TaskCompleteButton } from "../../components/task-complete-button";
-import { dueLabel, formattedDate, getTask, tasks } from "../../data";
+import { dueLabel, formattedDate } from "../../data";
+import { readTask } from "../../lib/task-store";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export function generateStaticParams() {
-  return tasks.map((task) => ({ id: task.id }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const task = getTask(id);
+  const task = await readTask(id);
 
   if (!task) {
     return {
@@ -38,18 +37,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TaskDetailPage({ params }: Props) {
   const { id } = await params;
-  const task = getTask(id);
+  const task = await readTask(id);
 
   if (!task) notFound();
 
   return (
     <AppShell title={task.title} eyebrow="Task Detail">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="rounded-lg border border-black/10 bg-white p-5 shadow-sm">
+        <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <Link href="/tasks" className="text-sm font-bold text-teal-700 hover:text-teal-900">
             Back to tasks
           </Link>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="rounded-lg bg-[#f8faf7] p-4">
               <p className="text-sm font-semibold text-[#68736f]">Subject</p>
               <p className="mt-1 text-lg font-bold">{task.subject}</p>
@@ -74,8 +73,8 @@ export default async function TaskDetailPage({ params }: Props) {
           </div>
         </section>
 
-        <aside className="space-y-5">
-          <TaskCompleteButton initialStatus={task.status} />
+        <aside className="space-y-4 sm:space-y-5">
+          <TaskCompleteButton taskId={task.id} initialStatus={task.status} />
           <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
             <p className="text-sm font-semibold text-[#68736f]">Notification Plan</p>
             <div className="mt-3 space-y-2 text-sm text-[#4d5a56]">

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sample-2",
+    "name": "brighton_college_singapore_university_format.csv",
+    "subject": "NET II",
+    "type": "CSV",
+    "size": "5 KB",
+    "uploadedAt": "2026-08-27T07:21:02.610Z",
+    "storageName": "sample-2-1787815262610-brighton_college_singapore_university_format.csv",
+    "url": "/api/documents/sample-2/download"
+  },
+  {
+    "id": "sample-4",
+    "name": "CSharp_III_Exercise.zip",
+    "subject": "C# III",
+    "type": "ZIP",
+    "size": "3.6 MB",
+    "uploadedAt": "2026-08-27"
+  }
+]

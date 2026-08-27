@@ -1,0 +1,22 @@
+[
+  {
+    "id": "2",
+    "title": "DSM Practical Work",
+    "subject": "DSM",
+    "teacher": "ROTH",
+    "deadline": "2026-08-30",
+    "description": "Complete the practical exercise and prepare notes for the next DSM class.",
+    "status": "Completed",
+    "priority": "Medium"
+  },
+  {
+    "id": "3",
+    "title": "WD III Page Design",
+    "subject": "WD III",
+    "teacher": "PIN",
+    "deadline": "2026-09-02",
+    "description": "Create a responsive web page using clean HTML structure and CSS layout.",
+    "status": "Pending",
+    "priority": "Medium"
+  }
+]

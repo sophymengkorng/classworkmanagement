@@ -11,14 +11,28 @@ export type Task = {
   priority: "High" | "Medium" | "Low";
 };
 
+export type DocumentRecord = {
+  id: string;
+  name: string;
+  subject: string;
+  type: string;
+  size: string;
+  uploadedAt: string;
+  storageName?: string;
+  url?: string;
+};
+
 export const today = new Date("2026-08-27T00:00:00");
 
 export const classInfo = {
   school: "SETEC",
-  group: "SW35",
+  group: "SW35 (E-T)",
   year: "Year 2",
   semester: "Semester 2",
   termStart: "2026-07-20",
+  sheetPage: "P50",
+  effectiveFrom: "2026-08-31",
+  changeNote: "Changes Thursday, Friday & Saturday",
 };
 
 export const schedule = [
@@ -51,7 +65,7 @@ export const schedule = [
     classes: [
       { time: "5:45 - 6:45 PM", subject: "3GD", teacher: "MENG", room: "1E" },
       { time: "6:45 - 7:45 PM", subject: "WD III", teacher: "PIN", room: "3C" },
-      { time: "7:45 - 8:45 PM", subject: "NET II", teacher: "OUDOM", room: "3C" },
+      { time: "7:45 - 8:45 PM", subject: "C# III", teacher: "PHARA", room: "3C" },
     ],
   },
   {
@@ -59,15 +73,15 @@ export const schedule = [
     classes: [
       { time: "5:45 - 6:45 PM", subject: "SP II", teacher: "RINA", room: "2J" },
       { time: "6:45 - 7:45 PM", subject: "ACD", teacher: "CR", room: "1I" },
-      { time: "7:45 - 8:45 PM", subject: "C# III", teacher: "PHARA", room: "2D" },
+      { time: "7:45 - 8:45 PM", subject: "NET II", teacher: "OUDOM", room: "2D" },
     ],
   },
   {
     day: "Saturday",
     classes: [
-      { time: "5:45 - 6:45 PM", subject: "ACD", teacher: "CR", room: "2B" },
-      { time: "6:45 - 7:45 PM", subject: "SP II", teacher: "RINA", room: "2B" },
-      { time: "7:45 - 8:45 PM", subject: "3GD", teacher: "MENG", room: "2B" },
+      { time: "5:45 - 6:45 PM", subject: "ACD", teacher: "CR", room: "5A" },
+      { time: "6:45 - 7:45 PM", subject: "SP II", teacher: "RINA", room: "5A" },
+      { time: "7:45 - 8:45 PM", subject: "3GD", teacher: "MENG", room: "5A" },
     ],
   },
 ];
@@ -134,11 +148,39 @@ export const tasks: Task[] = [
   },
 ];
 
-export const documents = [
-  { name: "NET_II_Assignment.pdf", subject: "NET II", type: "PDF", size: "2.4 MB" },
-  { name: "DSM_Practical_Work.pdf", subject: "DSM", type: "PDF", size: "880 KB" },
-  { name: "WD_III_Page_Design.docx", subject: "WD III", type: "DOCX", size: "1.1 MB" },
-  { name: "CSharp_III_Exercise.zip", subject: "C# III", type: "ZIP", size: "3.6 MB" },
+export const documents: DocumentRecord[] = [
+  {
+    id: "sample-1",
+    name: "NET_II_Assignment.pdf",
+    subject: "NET II",
+    type: "PDF",
+    size: "2.4 MB",
+    uploadedAt: "2026-08-27",
+  },
+  {
+    id: "sample-2",
+    name: "DSM_Practical_Work.pdf",
+    subject: "DSM",
+    type: "PDF",
+    size: "880 KB",
+    uploadedAt: "2026-08-27",
+  },
+  {
+    id: "sample-3",
+    name: "WD_III_Page_Design.docx",
+    subject: "WD III",
+    type: "DOCX",
+    size: "1.1 MB",
+    uploadedAt: "2026-08-27",
+  },
+  {
+    id: "sample-4",
+    name: "CSharp_III_Exercise.zip",
+    subject: "C# III",
+    type: "ZIP",
+    size: "3.6 MB",
+    uploadedAt: "2026-08-27",
+  },
 ];
 
 export function daysUntil(deadline: string) {
@@ -155,7 +197,8 @@ export function dueLabel(deadline: string) {
 }
 
 export function formattedDate(deadline: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(`${deadline}T00:00:00`));
+  const date = deadline.includes("T") ? new Date(deadline) : new Date(`${deadline}T00:00:00`);
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
 export function getTask(id: string) {

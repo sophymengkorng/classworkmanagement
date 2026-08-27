@@ -2,17 +2,20 @@
 
 This project is a Student Classwork Automation website built with Next.js, TypeScript, and Tailwind CSS. It helps a student manage class schedules, assignments, documents, and deadline notifications from one simple dashboard.
 
-The current version is a frontend prototype. It uses sample data inside the project so the pages work immediately without a database.
+The current version runs as a local full-stack Next.js prototype. It uses sample schedule data, saves created tasks to a local JSON file, and saves uploaded documents on the server during development.
 
 ## Main Features
 
 - Login page for entering the student system
 - Dashboard summary for today's classes, pending tasks, and due-tomorrow tasks
-- Weekly class schedule page
-- Tasks page with assignment cards
+- Weekly SETEC SW35 (E-T) class schedule page, updated to P50 effective August 31, 2026
+- Tasks page with assignment cards, edit buttons, and delete buttons
 - Task detail pages with subject, teacher, deadline, description, and status
-- Documents page for class files
-- Notifications page for deadline reminders
+- Documents page for uploading class files to the server
+- Server document storage with upload, download, replace, and delete actions
+- Dashboard notification button with a pop-up reminder dialog
+- Confirmation dialogs before login, task creation, task edits, task deletion, task status changes, document upload, and document deletion
+- Responsive layout for desktop, tablet, and mobile phone screens
 - Settings page for future Telegram, Gmail, database, and scheduler connections
 
 ## Page Flow
@@ -31,10 +34,8 @@ Dashboard
   |     |
   |     +-- Task Detail
   +-- Documents
-  +-- Notifications
-        |
-        v
-      Settings
+  +-- Notification Dialog
+  +-- Settings
 ```
 
 ## Website Pages
@@ -42,12 +43,11 @@ Dashboard
 | Page | URL | Purpose |
 | --- | --- | --- |
 | Login | `/` and `/login` | First screen. The Login button opens the dashboard. |
-| Dashboard | `/dashboard` | Shows the student summary and quick navigation buttons. |
+| Dashboard | `/dashboard` | Shows the student summary, quick navigation buttons, task creation form, and notification pop-up. |
 | Schedule | `/schedule` | Shows the weekly class schedule. |
 | Tasks | `/tasks` | Shows all assignments and links to task details. |
 | Task Detail | `/tasks/1`, `/tasks/2`, etc. | Shows full assignment details and a complete button. |
-| Documents | `/documents` | Shows class documents and assignment files. |
-| Notifications | `/notifications` | Shows deadline and class reminders. |
+| Documents | `/documents` | Uploads documents to the server and shows saved class files. |
 | Settings | `/settings` | Shows future automation settings. |
 
 ## Project Structure
@@ -55,6 +55,17 @@ Dashboard
 ```text
 app/
 +-- page.tsx                  # Login page
++-- api/
+|   +-- documents/
+|   |   +-- route.ts          # Upload and list documents
+|   |   +-- [id]/
+|   |       +-- route.ts      # Get and delete one document
+|   |       +-- download/
+|   |           +-- route.ts  # Download uploaded file
+|   +-- tasks/
+|       +-- route.ts          # Create and list tasks
+|       +-- [id]/
+|           +-- route.ts      # Get, edit, and delete one task
 +-- login/
 |   +-- page.tsx              # Login route
 +-- dashboard/
@@ -67,15 +78,22 @@ app/
 |       +-- page.tsx          # Task detail page
 +-- documents/
 |   +-- page.tsx              # Documents page
-+-- notifications/
-|   +-- page.tsx              # Notifications page
 +-- settings/
 |   +-- page.tsx              # Settings page
 +-- components/
 |   +-- app-shell.tsx         # Shared sidebar and page layout
+|   +-- dashboard-notifications-dialog.tsx
+|   +-- documents-manager.tsx # Document upload, download, replace, and delete UI
 |   +-- login-form.tsx        # Login form component
 |   +-- task-complete-button.tsx
++-- lib/
+|   +-- document-store.ts     # Local document metadata and file storage helpers
+|   +-- task-store.ts         # Local task storage helpers
 +-- data.ts                   # Sample schedule, tasks, documents, and helper functions
+data/
++-- documents.json            # Saved document metadata during local development
++-- tasks.json                # Saved task data during local development
++-- uploads/                  # Uploaded document files during local development
 ```
 
 ## Technology Used
@@ -119,9 +137,11 @@ npm run lint
 
 ## Current Status
 
-This project currently includes the frontend pages and navigation flow. The login, tasks, documents, schedule, notifications, and settings pages are ready as a visual and functional prototype.
+This project currently includes the pages, navigation flow, task server actions, document upload server actions, and responsive layouts. The login, dashboard, tasks, documents, schedule, notification dialog, and settings screens are ready as a working local prototype.
 
-The task data, schedule data, and document data are stored in `app/data.ts` for now.
+The schedule sample data is stored in `app/data.ts`. Created, edited, and deleted tasks are saved on the server in `data/tasks.json` during local development.
+
+Uploaded documents are saved on the server in `data/uploads/`, and their file information is saved in `data/documents.json` during local development. The Documents page can upload a file, download the saved file, replace it with a new file, and delete it after confirmation.
 
 ## Future Development
 
@@ -131,7 +151,7 @@ Recommended next steps:
 
 1. Add real authentication.
 2. Connect a SQL database for users, classes, tasks, and documents.
-3. Add document upload storage.
+3. Move document files from local storage to cloud storage for production.
 4. Add a deadline checker using a cron job or scheduled task.
 5. Connect Telegram Bot API for reminders.
 6. Connect Gmail or an email service for email notifications.
