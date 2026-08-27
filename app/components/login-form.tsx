@@ -1,0 +1,49 @@
+"use client";
+
+import { FormEvent } from "react";
+import { useRouter } from "next/navigation";
+
+export function LoginForm() {
+  const router = useRouter();
+
+  function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push("/dashboard");
+  }
+
+  return (
+    <form onSubmit={login} className="w-full max-w-md rounded-lg border border-black/10 bg-white p-6 shadow-sm">
+      <div className="text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-[#24312f] text-lg font-bold text-white">
+          SA
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">Student Assistant</h1>
+        <p className="mt-2 text-sm text-[#68736f]">Sign in to manage classes, tasks, documents, and reminders.</p>
+      </div>
+
+      <label className="mt-6 block text-sm font-semibold text-[#4d5a56]" htmlFor="email">
+        Email
+      </label>
+      <input
+        id="email"
+        className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
+        defaultValue="sophy@student.edu"
+        type="email"
+      />
+
+      <label className="mt-4 block text-sm font-semibold text-[#4d5a56]" htmlFor="password">
+        Password
+      </label>
+      <input
+        id="password"
+        className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
+        defaultValue="classwork"
+        type="password"
+      />
+
+      <button className="mt-6 h-12 w-full rounded-md bg-[#24312f] px-4 text-sm font-bold text-white transition hover:bg-[#314540]">
+        Login
+      </button>
+    </form>
+  );
+}
