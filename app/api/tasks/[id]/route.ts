@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { responseStatus } from "../../../lib/auth-error";
 import { deleteTask, readTask, updateTask } from "../../../lib/task-store";
 import { TaskStatus } from "../../../data";
 
@@ -12,13 +13,21 @@ function isTaskStatus(value: unknown): value is TaskStatus {
 
 export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
-  const task = await readTask(id);
 
-  if (!task) {
-    return NextResponse.json({ message: "Task not found." }, { status: 404 });
+  try {
+    const task = await readTask(id);
+
+    if (!task) {
+      return NextResponse.json({ message: "Task not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ task });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Could not read task." },
+      { status: responseStatus(error, 404) },
+    );
   }
-
-  return NextResponse.json({ task });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -35,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Could not update task." },
-      { status: 404 },
+      { status: responseStatus(error, 404) },
     );
   }
 }
@@ -49,7 +58,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Could not delete task." },
-      { status: 404 },
+      { status: responseStatus(error, 404) },
     );
   }
 }

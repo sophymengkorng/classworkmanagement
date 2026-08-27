@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { responseStatus } from "../../../lib/auth-error";
 import { deleteDocument, readDocument, replaceUploadedDocument } from "../../../lib/document-store";
 
 type Params = {
@@ -7,13 +8,21 @@ type Params = {
 
 export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
-  const document = await readDocument(id);
 
-  if (!document) {
-    return NextResponse.json({ message: "Document not found." }, { status: 404 });
+  try {
+    const document = await readDocument(id);
+
+    if (!document) {
+      return NextResponse.json({ message: "Document not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ document });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Could not read document." },
+      { status: responseStatus(error, 404) },
+    );
   }
-
-  return NextResponse.json({ document });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
@@ -25,7 +34,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Could not delete document." },
-      { status: 404 },
+      { status: responseStatus(error, 404) },
     );
   }
 }
@@ -47,7 +56,7 @@ export async function PUT(request: Request, { params }: Params) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Could not replace document." },
-      { status: 400 },
+      { status: responseStatus(error, 400) },
     );
   }
 }

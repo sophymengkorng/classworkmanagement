@@ -1,6 +1,11 @@
 import { AppShell } from "../components/app-shell";
+import { requireAuth } from "../lib/require-auth";
 
-export default function SettingsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SettingsPage() {
+  await requireAuth();
+
   return (
     <AppShell title="Settings" eyebrow="Automation Preferences">
       <div className="grid gap-5 lg:grid-cols-2">

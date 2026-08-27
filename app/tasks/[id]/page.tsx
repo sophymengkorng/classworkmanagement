@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
 import { TaskCompleteButton } from "../../components/task-complete-button";
 import { dueLabel, formattedDate } from "../../data";
+import { requireAuth } from "../../lib/require-auth";
 import { readTask } from "../../lib/task-store";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await requireAuth();
   const { id } = await params;
   const task = await readTask(id);
 
@@ -36,6 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TaskDetailPage({ params }: Props) {
+  await requireAuth();
   const { id } = await params;
   const task = await readTask(id);
 

@@ -4,11 +4,13 @@ import { DashboardNotificationsDialog } from "../components/dashboard-notificati
 import { DashboardTaskCreator } from "../components/dashboard-task-creator";
 import { daysUntil, todaysClasses } from "../data";
 import { readDocuments } from "../lib/document-store";
+import { requireAuth } from "../lib/require-auth";
 import { readTasks } from "../lib/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  await requireAuth();
   const serverTasks = await readTasks();
   const documents = await readDocuments();
   const pendingTasks = serverTasks.filter((task) => task.status !== "Completed");

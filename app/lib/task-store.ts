@@ -1,6 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { Task, TaskStatus, tasks as seedTasks } from "../data";
+import { AuthRequiredError } from "./auth-error";
+import { isSupabaseConfigured } from "./supabase/config";
+import { createClient as createSupabaseServerClient } from "./supabase/server";
 
 export type TaskInput = {
   title: string;
@@ -13,6 +16,48 @@ export type TaskInput = {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "tasks.json");
+
+type SupabaseTaskRow = {
+  id: string;
+  title: string;
+  subject: string;
+  teacher: string;
+  deadline: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: Task["priority"];
+};
+
+function rowToTask(row: SupabaseTaskRow): Task {
+  return {
+    id: row.id,
+    title: row.title,
+    subject: row.subject,
+    teacher: row.teacher,
+    deadline: row.deadline,
+    description: row.description ?? "No description added yet.",
+    status: row.status,
+    priority: row.priority,
+  };
+}
+
+async function getAuthenticatedSupabase() {
+  if (!isSupabaseConfigured()) return null;
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new AuthRequiredError();
+  }
+
+  return { supabase, user };
+}
 
 async function ensureStore() {
   await fs.mkdir(storeDirectory, { recursive: true });
@@ -42,6 +87,22 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
 }
 
 export async function readTasks() {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .select("id,title,subject,teacher,deadline,description,status,priority")
+      .eq("user_id", auth.user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Could not read tasks from Supabase: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => rowToTask(row as SupabaseTaskRow));
+  }
+
   await ensureStore();
 
   try {
@@ -58,6 +119,23 @@ export async function readTasks() {
 }
 
 export async function readTask(id: string) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .select("id,title,subject,teacher,deadline,description,status,priority")
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not read task from Supabase: ${error.message}`);
+    }
+
+    return data ? rowToTask(data as SupabaseTaskRow) : undefined;
+  }
+
   const currentTasks = await readTasks();
   return currentTasks.find((task) => task.id === id);
 }
@@ -67,6 +145,31 @@ export async function createTask(input: Partial<TaskInput>) {
 
   if (!normalized.title || !normalized.subject || !normalized.teacher || !normalized.deadline) {
     throw new Error("Task title, subject, teacher, and deadline are required.");
+  }
+
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .insert({
+        user_id: auth.user.id,
+        title: normalized.title,
+        subject: normalized.subject,
+        teacher: normalized.teacher,
+        deadline: normalized.deadline,
+        description: normalized.description,
+        status: "Pending",
+        priority: normalized.priority,
+      })
+      .select("id,title,subject,teacher,deadline,description,status,priority")
+      .single();
+
+    if (error) {
+      throw new Error(`Could not save task to Supabase: ${error.message}`);
+    }
+
+    return rowToTask(data as SupabaseTaskRow);
   }
 
   const currentTasks = await readTasks();
@@ -86,6 +189,28 @@ export async function createTask(input: Partial<TaskInput>) {
 }
 
 export async function updateTaskStatus(id: string, status: TaskStatus) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .update({ status })
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .select("id,title,subject,teacher,deadline,description,status,priority")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not update task in Supabase: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error("Task not found.");
+    }
+
+    return rowToTask(data as SupabaseTaskRow);
+  }
+
   const currentTasks = await readTasks();
   let updatedTask: Task | undefined;
 
@@ -104,6 +229,49 @@ export async function updateTaskStatus(id: string, status: TaskStatus) {
 }
 
 export async function updateTask(id: string, input: Partial<TaskInput> & { status?: TaskStatus }) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const existingTask = await readTask(id);
+    if (!existingTask) {
+      throw new Error("Task not found.");
+    }
+
+    const normalized = normalizeTaskInput({
+      title: input.title ?? existingTask.title,
+      subject: input.subject ?? existingTask.subject,
+      teacher: input.teacher ?? existingTask.teacher,
+      deadline: input.deadline ?? existingTask.deadline,
+      description: input.description ?? existingTask.description,
+      priority: input.priority ?? existingTask.priority,
+    });
+
+    if (!normalized.title || !normalized.subject || !normalized.teacher || !normalized.deadline) {
+      throw new Error("Task title, subject, teacher, and deadline are required.");
+    }
+
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .update({
+        ...normalized,
+        status: input.status ?? existingTask.status,
+      })
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .select("id,title,subject,teacher,deadline,description,status,priority")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not update task in Supabase: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error("Task not found.");
+    }
+
+    return rowToTask(data as SupabaseTaskRow);
+  }
+
   const currentTasks = await readTasks();
   let updatedTask: Task | undefined;
 
@@ -140,6 +308,27 @@ export async function updateTask(id: string, input: Partial<TaskInput> & { statu
 }
 
 export async function deleteTask(id: string) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("tasks")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .select("id");
+
+    if (error) {
+      throw new Error(`Could not delete task from Supabase: ${error.message}`);
+    }
+
+    if (!data?.length) {
+      throw new Error("Task not found.");
+    }
+
+    return;
+  }
+
   const currentTasks = await readTasks();
   const nextTasks = currentTasks.filter((task) => task.id !== id);
 

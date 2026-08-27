@@ -1,10 +1,54 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { DocumentRecord, documents as seedDocuments } from "../data";
+import { AuthRequiredError } from "./auth-error";
+import { isSupabaseConfigured, supabaseDocumentBucket } from "./supabase/config";
+import { createClient as createSupabaseServerClient } from "./supabase/server";
 
 const storeDirectory = path.join(process.cwd(), "data");
 const uploadDirectory = path.join(storeDirectory, "uploads");
 const storePath = path.join(storeDirectory, "documents.json");
+
+type SupabaseDocumentRow = {
+  id: string;
+  name: string;
+  subject: string;
+  type: string;
+  size: string;
+  uploaded_at: string;
+  storage_path: string | null;
+};
+
+function rowToDocument(row: SupabaseDocumentRow): DocumentRecord {
+  return {
+    id: row.id,
+    name: row.name,
+    subject: row.subject,
+    type: row.type,
+    size: row.size,
+    uploadedAt: row.uploaded_at,
+    storageName: row.storage_path ?? undefined,
+    url: row.storage_path ? `/api/documents/${row.id}/download` : undefined,
+  };
+}
+
+async function getAuthenticatedSupabase() {
+  if (!isSupabaseConfigured()) return null;
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new AuthRequiredError();
+  }
+
+  return { supabase, user };
+}
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -33,6 +77,10 @@ function validateUpload(file: File, subject: string) {
 
 function createStorageName(id: string, fileName: string) {
   return `${id}-${Date.now()}-${sanitizeFileName(fileName)}`;
+}
+
+function createStoragePath(userId: string, id: string, fileName: string) {
+  return `${userId}/${createStorageName(id, fileName)}`;
 }
 
 function createDocumentRecord(id: string, file: File, subject: string, storageName: string): DocumentRecord {
@@ -65,6 +113,22 @@ async function ensureStore() {
 }
 
 export async function readDocuments() {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .select("id,name,subject,type,size,uploaded_at,storage_path")
+      .eq("user_id", auth.user.id)
+      .order("uploaded_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Could not read documents from Supabase: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => rowToDocument(row as SupabaseDocumentRow));
+  }
+
   await ensureStore();
 
   try {
@@ -79,12 +143,67 @@ export async function readDocuments() {
 }
 
 export async function readDocument(id: string) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .select("id,name,subject,type,size,uploaded_at,storage_path")
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not read document from Supabase: ${error.message}`);
+    }
+
+    return data ? rowToDocument(data as SupabaseDocumentRow) : undefined;
+  }
+
   const documents = await readDocuments();
   return documents.find((document) => document.id === id);
 }
 
 export async function saveUploadedDocument(file: File, subject: string) {
   validateUpload(file, subject);
+
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const id = crypto.randomUUID();
+    const storagePath = createStoragePath(auth.user.id, id, file.name);
+    const buffer = await file.arrayBuffer();
+
+    const { error: uploadError } = await auth.supabase.storage.from(supabaseDocumentBucket).upload(storagePath, buffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+
+    if (uploadError) {
+      throw new Error(`Could not upload document to Supabase Storage: ${uploadError.message}`);
+    }
+
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .insert({
+        id,
+        user_id: auth.user.id,
+        name: file.name,
+        subject: subject.trim(),
+        type: extensionType(file.name),
+        size: formatBytes(file.size),
+        storage_path: storagePath,
+      })
+      .select("id,name,subject,type,size,uploaded_at,storage_path")
+      .single();
+
+    if (error) {
+      await auth.supabase.storage.from(supabaseDocumentBucket).remove([storagePath]);
+      throw new Error(`Could not save document to Supabase: ${error.message}`);
+    }
+
+    return rowToDocument(data as SupabaseDocumentRow);
+  }
 
   const currentDocuments = await readDocuments();
   const id = Date.now().toString();
@@ -102,6 +221,51 @@ export async function saveUploadedDocument(file: File, subject: string) {
 
 export async function replaceUploadedDocument(id: string, file: File, subject: string) {
   validateUpload(file, subject);
+
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const previousDocument = await readDocument(id);
+
+    if (!previousDocument?.storageName) {
+      throw new Error("Document not found.");
+    }
+
+    const storagePath = createStoragePath(auth.user.id, id, file.name);
+    const buffer = await file.arrayBuffer();
+
+    const { error: uploadError } = await auth.supabase.storage.from(supabaseDocumentBucket).upload(storagePath, buffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+
+    if (uploadError) {
+      throw new Error(`Could not upload replacement to Supabase Storage: ${uploadError.message}`);
+    }
+
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .update({
+        name: file.name,
+        subject: subject.trim(),
+        type: extensionType(file.name),
+        size: formatBytes(file.size),
+        storage_path: storagePath,
+        uploaded_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .select("id,name,subject,type,size,uploaded_at,storage_path")
+      .maybeSingle();
+
+    if (error || !data) {
+      await auth.supabase.storage.from(supabaseDocumentBucket).remove([storagePath]);
+      throw new Error(error ? `Could not replace document in Supabase: ${error.message}` : "Document not found.");
+    }
+
+    await auth.supabase.storage.from(supabaseDocumentBucket).remove([previousDocument.storageName]);
+    return rowToDocument(data as SupabaseDocumentRow);
+  }
 
   const currentDocuments = await readDocuments();
   const documentIndex = currentDocuments.findIndex((item) => item.id === id);
@@ -133,6 +297,25 @@ export async function replaceUploadedDocument(id: string, file: File, subject: s
 }
 
 export async function readUploadedDocumentFile(id: string) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const document = await readDocument(id);
+
+    if (!document?.storageName) {
+      throw new Error("Uploaded file not found.");
+    }
+
+    const { data, error } = await auth.supabase.storage.from(supabaseDocumentBucket).download(document.storageName);
+
+    if (error || !data) {
+      throw new Error(error ? `Could not download document from Supabase Storage: ${error.message}` : "Uploaded file not found.");
+    }
+
+    const file = Buffer.from(await data.arrayBuffer());
+    return { document, file };
+  }
+
   const document = await readDocument(id);
 
   if (!document?.storageName) {
@@ -145,6 +328,37 @@ export async function readUploadedDocumentFile(id: string) {
 }
 
 export async function deleteDocument(id: string) {
+  const auth = await getAuthenticatedSupabase();
+
+  if (auth) {
+    const document = await readDocument(id);
+
+    if (!document) {
+      throw new Error("Document not found.");
+    }
+
+    if (document.storageName) {
+      await auth.supabase.storage.from(supabaseDocumentBucket).remove([document.storageName]);
+    }
+
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .select("id");
+
+    if (error) {
+      throw new Error(`Could not delete document from Supabase: ${error.message}`);
+    }
+
+    if (!data?.length) {
+      throw new Error("Document not found.");
+    }
+
+    return;
+  }
+
   const currentDocuments = await readDocuments();
   const document = currentDocuments.find((item) => item.id === id);
 

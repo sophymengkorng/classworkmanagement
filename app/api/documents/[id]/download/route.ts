@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { responseStatus } from "../../../../lib/auth-error";
 import { readUploadedDocumentFile } from "../../../../lib/document-store";
 
 type Params = {
@@ -16,7 +17,10 @@ export async function GET(_request: Request, { params }: Params) {
         "Content-Type": "application/octet-stream",
       },
     });
-  } catch {
-    return NextResponse.json({ message: "Document file not found." }, { status: 404 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Document file not found." },
+      { status: responseStatus(error, 404) },
+    );
   }
 }

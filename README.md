@@ -135,13 +135,42 @@ Run lint checks:
 npm run lint
 ```
 
+## Supabase Login Setup
+
+Create a `.env.local` file from `.env.example`, then add your Supabase project values:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your-supabase-publishable-key"
+SUPABASE_DOCUMENT_BUCKET="student-documents"
+```
+
+The login form uses Supabase email/password authentication. Students can switch between Login and Create Account on the same form. When Supabase is configured, `/dashboard` checks the authenticated session and redirects unsigned users back to `/login`.
+
+If email confirmation is enabled in Supabase, a new student must confirm their email before logging in.
+
+For hosting, add the same environment variables in your hosting dashboard, then redeploy the project.
+
+## Supabase Database Setup
+
+Before deploying, open your Supabase project and run [supabase/schema.sql](</E:/Student_Class_Work/my-app/supabase/schema.sql>) in the Supabase SQL Editor.
+
+This creates:
+
+- `tasks` table for each user's assignments
+- `documents` table for each user's document records
+- `student-documents` private storage bucket for uploaded files
+- Row Level Security policies so each logged-in user can only access their own data
+
+After this setup, hosted users can create an account, log in, create tasks, edit tasks, delete tasks, upload documents, replace documents, download documents, and delete documents with data saved in Supabase instead of local JSON files.
+
 ## Current Status
 
-This project currently includes the pages, navigation flow, task server actions, document upload server actions, and responsive layouts. The login, dashboard, tasks, documents, schedule, notification dialog, and settings screens are ready as a working local prototype.
+This project currently includes the pages, navigation flow, Supabase login, protected system pages, logout, Supabase task storage, Supabase document storage, and responsive layouts. The login, dashboard, tasks, documents, schedule, notification dialog, and settings screens are ready as a working hosted prototype after the Supabase SQL setup is complete.
 
-The schedule sample data is stored in `app/data.ts`. Created, edited, and deleted tasks are saved on the server in `data/tasks.json` during local development.
+The schedule sample data is stored in `app/data.ts`. When Supabase environment variables are configured, created, edited, and deleted tasks are saved in the Supabase `tasks` table for the logged-in user. Without Supabase environment variables, local development falls back to `data/tasks.json`.
 
-Uploaded documents are saved on the server in `data/uploads/`, and their file information is saved in `data/documents.json` during local development. The Documents page can upload a file, download the saved file, replace it with a new file, and delete it after confirmation.
+When Supabase environment variables are configured, uploaded documents are saved in Supabase Storage and their file information is saved in the Supabase `documents` table for the logged-in user. Without Supabase environment variables, local development falls back to `data/uploads/` and `data/documents.json`.
 
 ## Future Development
 

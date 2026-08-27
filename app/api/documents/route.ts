@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
+import { responseStatus } from "../../lib/auth-error";
 import { readDocuments, saveUploadedDocument } from "../../lib/document-store";
 
 export async function GET() {
-  const documents = await readDocuments();
-  return NextResponse.json({ documents });
+  try {
+    const documents = await readDocuments();
+    return NextResponse.json({ documents });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Could not read documents." },
+      { status: responseStatus(error, 400) },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -21,7 +29,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Could not upload document." },
-      { status: 400 },
+      { status: responseStatus(error, 400) },
     );
   }
 }

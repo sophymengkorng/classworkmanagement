@@ -1,7 +1,12 @@
 import { AppShell } from "../components/app-shell";
 import { classInfo, courseCatalog, formattedDate, schedule, semesterEvents } from "../data";
+import { requireAuth } from "../lib/require-auth";
 
-export default function SchedulePage() {
+export const dynamic = "force-dynamic";
+
+export default async function SchedulePage() {
+  await requireAuth();
+
   return (
     <AppShell title="SW35 (E-T) Schedule" eyebrow={`${classInfo.school} - ${classInfo.year}, ${classInfo.semester}`}>
       <section className="mb-4 rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:mb-5 sm:p-5">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { LogoutButton } from "./logout-button";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -55,6 +56,8 @@ export function AppShell({
               );
             })}
           </nav>
+
+          <LogoutButton />
 
           <div className="mt-6 hidden rounded-lg border border-white/12 bg-white/8 p-4 lg:block">
             <p className="text-sm font-semibold">Automation Status</p>
