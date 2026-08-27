@@ -38,14 +38,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TaskDetailPage({ params }: Props) {
-  await requireAuth();
+  const user = await requireAuth();
   const { id } = await params;
   const task = await readTask(id);
 
   if (!task) notFound();
 
   return (
-    <AppShell title={task.title} eyebrow="Task Detail">
+    <AppShell title={task.title} eyebrow="Task Detail" user={user}>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <Link href="/tasks" className="text-sm font-bold text-teal-700 hover:text-teal-900">

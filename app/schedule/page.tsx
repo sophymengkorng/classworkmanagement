@@ -5,10 +5,10 @@ import { requireAuth } from "../lib/require-auth";
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage() {
-  await requireAuth();
+  const user = await requireAuth();
 
   return (
-    <AppShell title="SW35 (E-T) Schedule" eyebrow={`${classInfo.school} - ${classInfo.year}, ${classInfo.semester}`}>
+    <AppShell title="SW35 (E-T) Schedule" eyebrow={`${classInfo.school} - ${classInfo.year}, ${classInfo.semester}`} user={user}>
       <section className="mb-4 rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:mb-5 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {[

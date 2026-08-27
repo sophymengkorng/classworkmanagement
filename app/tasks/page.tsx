@@ -6,11 +6,11 @@ import { readTasks } from "../lib/task-store";
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
-  await requireAuth();
+  const user = await requireAuth();
   const tasks = await readTasks();
 
   return (
-    <AppShell title="My Tasks" eyebrow="Assignments">
+    <AppShell title="My Tasks" eyebrow="Assignments" user={user}>
       <TasksManager initialTasks={tasks} />
     </AppShell>
   );

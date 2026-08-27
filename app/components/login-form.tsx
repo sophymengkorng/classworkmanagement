@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
+import { siteUrl } from "../lib/supabase/config";
 
 type AuthMode = "login" | "signup";
 
 export function LoginForm() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
 
   const [email, setEmail] = useState("");
@@ -19,7 +22,14 @@ export function LoginForm() {
   const isSignup = mode === "signup";
 
   function openDashboard() {
-    window.location.assign("/dashboard");
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  function authCallbackUrl() {
+    const origin = siteUrl || window.location.origin;
+
+    return `${origin}/auth/callback?next=/dashboard`;
   }
 
   async function handleAuth(authMode: AuthMode) {
@@ -58,7 +68,7 @@ export function LoginForm() {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+            emailRedirectTo: authCallbackUrl(),
           },
         });
 

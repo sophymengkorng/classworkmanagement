@@ -1,9 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { Task, TaskStatus, tasks as seedTasks } from "../data";
-import { AuthRequiredError } from "./auth-error";
-import { isSupabaseConfigured } from "./supabase/config";
-import { createClient as createSupabaseServerClient } from "./supabase/server";
+import { getAuthContext } from "./supabase/auth";
 
 export type TaskInput = {
   title: string;
@@ -41,24 +39,6 @@ function rowToTask(row: SupabaseTaskRow): Task {
   };
 }
 
-async function getAuthenticatedSupabase() {
-  if (!isSupabaseConfigured()) return null;
-
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    throw new AuthRequiredError();
-  }
-
-  return { supabase, user };
-}
-
 async function ensureStore() {
   await fs.mkdir(storeDirectory, { recursive: true });
 
@@ -87,7 +67,7 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
 }
 
 export async function readTasks() {
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -119,7 +99,7 @@ export async function readTasks() {
 }
 
 export async function readTask(id: string) {
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -147,7 +127,7 @@ export async function createTask(input: Partial<TaskInput>) {
     throw new Error("Task title, subject, teacher, and deadline are required.");
   }
 
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -189,7 +169,7 @@ export async function createTask(input: Partial<TaskInput>) {
 }
 
 export async function updateTaskStatus(id: string, status: TaskStatus) {
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -229,7 +209,7 @@ export async function updateTaskStatus(id: string, status: TaskStatus) {
 }
 
 export async function updateTask(id: string, input: Partial<TaskInput> & { status?: TaskStatus }) {
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const existingTask = await readTask(id);
@@ -308,7 +288,7 @@ export async function updateTask(id: string, input: Partial<TaskInput> & { statu
 }
 
 export async function deleteTask(id: string) {
-  const auth = await getAuthenticatedSupabase();
+  const auth = await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase

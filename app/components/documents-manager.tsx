@@ -1,10 +1,12 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { courseCatalog, DocumentRecord, formattedDate } from "../data";
 import { ConfirmationDialog } from "./confirmation-dialog";
 
 export function DocumentsManager({ initialDocuments }: { initialDocuments: DocumentRecord[] }) {
+  const router = useRouter();
   const [documents, setDocuments] = useState(initialDocuments);
   const [subject, setSubject] = useState(courseCatalog[0]?.code ?? "NET II");
   const [file, setFile] = useState<File | null>(null);
@@ -41,6 +43,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
 
       const response = await fetch("/api/documents", {
         method: "POST",
+        credentials: "same-origin",
         body: formData,
       });
       const result = (await response.json()) as { document?: DocumentRecord; message?: string };
@@ -54,6 +57,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
       setMessage("Document uploaded and saved to server.");
       const fileInput = document.getElementById("document-file") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not upload document.");
     } finally {
@@ -69,7 +73,10 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
     setMessage("");
 
     try {
-      const response = await fetch(`/api/documents/${deleteTarget.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/documents/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
       const result = (await response.json()) as { message?: string };
 
       if (!response.ok) {
@@ -78,6 +85,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
 
       setDocuments((current) => current.filter((document) => document.id !== deleteTarget.id));
       setMessage("Document deleted from server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete document.");
     } finally {
@@ -109,6 +117,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
 
       const response = await fetch(`/api/documents/${replaceTarget.id}`, {
         method: "PUT",
+        credentials: "same-origin",
         body: formData,
       });
       const result = (await response.json()) as { document?: DocumentRecord; message?: string };
@@ -121,6 +130,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
       setMessage("Document replaced and saved to server.");
       setReplaceTarget(null);
       setReplacementFile(null);
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not replace document.");
     } finally {

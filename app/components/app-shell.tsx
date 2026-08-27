@@ -13,30 +13,59 @@ const navItems = [
   { href: "/settings", label: "Settings" },
 ];
 
+type ShellUser = {
+  email?: string | null;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+  };
+};
+
+function userDisplayName(user?: ShellUser | null) {
+  const metadataName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+  const emailName = user?.email?.split("@")[0];
+
+  return metadataName || emailName || "Student";
+}
+
+function userInitials(name: string) {
+  return name
+    .split(/[.\s_-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "SA";
+}
+
 export function AppShell({
   children,
   title,
   eyebrow,
   action,
+  user,
 }: {
   children: ReactNode;
   title: string;
   eyebrow?: string;
   action?: ReactNode;
+  user?: ShellUser | null;
 }) {
   const pathname = usePathname();
+  const displayName = userDisplayName(user);
+  const initials = userInitials(displayName);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f6f4ee] text-[#1d2026]">
       <div className="grid min-h-screen lg:grid-cols-[260px_1fr]">
         <aside className="border-b border-black/10 bg-[#24312f] px-4 py-4 text-white sm:px-5 lg:border-b-0 lg:border-r lg:border-white/10 lg:py-6">
-          <Link href="/dashboard" className="flex items-center justify-between gap-4 lg:block" aria-label="Class Student Automation dashboard">
-            <div>
-              <p className="text-sm font-medium text-teal-100">Student Assistant</p>
-              <h1 className="mt-1 text-2xl font-semibold">Class</h1>
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Student profile dashboard">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-[#24312f] ring-2 ring-white/20">
+              {initials}
             </div>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-lg font-bold text-[#24312f]">
-              SA
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-teal-100">Student Assistant</p>
+              <h1 className="mt-0.5 truncate text-base font-semibold leading-tight">{displayName}</h1>
+              {user?.email && <p className="mt-0.5 truncate text-[11px] font-medium text-white/62">{user.email}</p>}
             </div>
           </Link>
 

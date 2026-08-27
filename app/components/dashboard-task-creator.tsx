@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { courseCatalog, formattedDate, Task } from "../data";
 import { ConfirmationDialog } from "./confirmation-dialog";
@@ -34,6 +35,7 @@ const defaultDraft: DraftTask = {
 };
 
 export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] }) {
+  const router = useRouter();
   const [draft, setDraft] = useState<DraftTask>(defaultDraft);
   const [savedTasks, setSavedTasks] = useState<Task[]>(initialTasks);
   const [saving, setSaving] = useState(false);
@@ -94,6 +96,7 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
     try {
       const response = await fetch("/api/tasks", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
@@ -106,6 +109,7 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
       setSavedTasks((current) => [result.task as Task, ...current]);
       setDraft((current) => ({ ...defaultDraft, subject: current.subject, teacher: current.teacher }));
       setMessage("Task saved to server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save task.");
     } finally {
@@ -127,6 +131,7 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
     try {
       const response = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editDraft),
       });
@@ -140,6 +145,7 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
       setEditingTaskId(null);
       setEditDraft(null);
       setMessage("Task updated and saved to server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update task.");
     } finally {
@@ -152,7 +158,10 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
     setMessage("");
 
     try {
-      const response = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
       const result = (await response.json()) as { message?: string };
 
       if (!response.ok) {
@@ -165,6 +174,7 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
         setEditDraft(null);
       }
       setMessage("Task deleted from server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete task.");
     } finally {

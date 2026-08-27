@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TaskStatus } from "../data";
 import { ConfirmationDialog } from "./confirmation-dialog";
 
 export function TaskCompleteButton({ taskId, initialStatus }: { taskId: string; initialStatus: TaskStatus }) {
+  const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -20,6 +22,7 @@ export function TaskCompleteButton({ taskId, initialStatus }: { taskId: string; 
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: nextStatus }),
       });
@@ -31,6 +34,7 @@ export function TaskCompleteButton({ taskId, initialStatus }: { taskId: string; 
 
       setStatus(result.task.status);
       setMessage("Status saved to server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update task.");
     } finally {

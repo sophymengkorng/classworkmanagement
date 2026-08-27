@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { courseCatalog, dueLabel, formattedDate, Task } from "../data";
 import { ConfirmationDialog } from "./confirmation-dialog";
@@ -27,6 +28,7 @@ function taskToEditable(task: Task): EditableTask {
 }
 
 export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
+  const router = useRouter();
   const [tasks, setTasks] = useState(initialTasks);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditableTask | null>(null);
@@ -67,6 +69,7 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
     try {
       const response = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
@@ -80,6 +83,7 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
       setEditingId(null);
       setDraft(null);
       setMessage("Task updated and saved to server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update task.");
     } finally {
@@ -92,7 +96,10 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
     setMessage("");
 
     try {
-      const response = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
       const result = (await response.json()) as { message?: string };
 
       if (!response.ok) {
@@ -105,6 +112,7 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
         setDraft(null);
       }
       setMessage("Task deleted from server.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete task.");
     } finally {

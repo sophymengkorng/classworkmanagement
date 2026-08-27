@@ -7,6 +7,9 @@ export const supabasePublishableKey =
 export const supabaseDocumentBucket =
   process.env.SUPABASE_DOCUMENT_BUCKET ?? "student-documents";
 
+export const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+
 export function isSupabaseConfigured() {
   return Boolean(
     supabaseUrl &&

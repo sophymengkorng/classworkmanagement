@@ -10,9 +10,8 @@ import { readTasks } from "../lib/task-store";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  await requireAuth();
-  const serverTasks = await readTasks();
-  const documents = await readDocuments();
+  const user = await requireAuth();
+  const [serverTasks, documents] = await Promise.all([readTasks(), readDocuments()]);
   const pendingTasks = serverTasks.filter((task) => task.status !== "Completed");
   const dueTomorrowTasks = pendingTasks.filter((task) => daysUntil(task.deadline) === 1);
 
@@ -23,7 +22,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={serverTasks} />}>
+    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={serverTasks} />} user={user}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid gap-3 sm:grid-cols-3">

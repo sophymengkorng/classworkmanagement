@@ -142,6 +142,7 @@ Create a `.env.local` file from `.env.example`, then add your Supabase project v
 ```env
 NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your-supabase-publishable-key"
+NEXT_PUBLIC_SITE_URL="https://your-hosted-website.com"
 SUPABASE_DOCUMENT_BUCKET="student-documents"
 ```
 
@@ -149,7 +150,13 @@ The login form uses Supabase email/password authentication. Students can switch 
 
 If email confirmation is enabled in Supabase, a new student must confirm their email before logging in.
 
-For hosting, add the same environment variables in your hosting dashboard, then redeploy the project.
+For hosting, add the same environment variables in your hosting dashboard, then redeploy the project. `NEXT_PUBLIC_SITE_URL` must be your deployed website URL, for example `https://student-class-work.vercel.app`, not `http://localhost:3000`.
+
+In Supabase, also open **Authentication > URL Configuration** and set:
+
+- **Site URL:** your hosted website URL
+- **Redirect URLs:** your hosted callback URL, for example `https://student-class-work.vercel.app/auth/callback`
+- Optional local redirect for development: `http://localhost:3000/auth/callback`
 
 ## Supabase Database Setup
 
