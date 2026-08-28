@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { courseCatalog, DocumentRecord, formattedDate } from "../data";
@@ -8,6 +9,7 @@ import { ConfirmationDialog } from "./confirmation-dialog";
 export function DocumentsManager({ initialDocuments }: { initialDocuments: DocumentRecord[] }) {
   const router = useRouter();
   const [documents, setDocuments] = useState(initialDocuments);
+  const [previewTarget, setPreviewTarget] = useState<DocumentRecord | null>(null);
   const [subject, setSubject] = useState(courseCatalog[0]?.code ?? "NET II");
   const [file, setFile] = useState<File | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -138,6 +140,15 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
     }
   }
 
+  function isImageDocument(document: DocumentRecord) {
+    return ["PNG", "JPG", "JPEG", "GIF", "WEBP"].includes(document.type.toUpperCase());
+  }
+
+  function openPreview(document: DocumentRecord) {
+    if (!document.url || !isImageDocument(document)) return;
+    setPreviewTarget(document);
+  }
+
   return (
     <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -181,11 +192,28 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
       <div className="mt-5 grid gap-3 lg:grid-cols-2">
         {documents.map((document) => (
           <article key={document.id} className="grid gap-3 rounded-lg border border-black/8 p-3 sm:grid-cols-[52px_minmax(0,1fr)] sm:items-center sm:p-4 xl:grid-cols-[52px_minmax(0,1fr)_auto]">
-            <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#e8eef8] text-xs font-bold text-[#285178]">
+            <button
+              type="button"
+              className={`flex h-12 w-12 items-center justify-center rounded-md bg-[#e8eef8] text-xs font-bold text-[#285178] ${
+                document.url && isImageDocument(document) ? "cursor-pointer hover:bg-[#dce8f6]" : "cursor-default"
+              }`}
+              aria-label={document.url && isImageDocument(document) ? `Preview ${document.name}` : document.type}
+              onClick={() => openPreview(document)}
+            >
               {document.type}
-            </span>
+            </button>
             <div className="min-w-0">
-              <p className="break-words font-bold sm:truncate">{document.name}</p>
+              {document.url && isImageDocument(document) ? (
+                <button
+                  type="button"
+                  className="block max-w-full break-words text-left font-bold hover:text-teal-700 sm:truncate"
+                  onClick={() => openPreview(document)}
+                >
+                  {document.name}
+                </button>
+              ) : (
+                <p className="break-words font-bold sm:truncate">{document.name}</p>
+              )}
               <p className="text-sm text-[#68736f]">
                 {document.subject} - {formattedDate(document.uploadedAt)}
               </p>
@@ -193,7 +221,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
             <div className="grid gap-2 sm:col-span-2 sm:grid-cols-3 xl:col-span-1">
               {document.url ? (
                 <a
-                  href={document.url}
+                  href={`${document.url}?download=1`}
                   download
                   className="flex h-10 items-center justify-center rounded-md border border-black/10 px-3 text-sm font-bold hover:bg-[#f8faf7]"
                 >
@@ -224,6 +252,60 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
           </article>
         ))}
       </div>
+
+      {previewTarget?.url && (
+        <div className="fixed inset-0 z-50 grid min-h-dvh place-items-center bg-black/55 p-4">
+          <div
+            className="mx-auto w-full max-w-3xl overflow-hidden rounded-lg border border-black/10 bg-white shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="document-preview-title"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-black/10 px-4 py-3 sm:px-5">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-teal-700">Document Preview</p>
+                <h3 id="document-preview-title" className="truncate text-lg font-bold">
+                  {previewTarget.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-black/10 text-sm font-bold hover:bg-[#f8faf7]"
+                aria-label="Close preview"
+                onClick={() => setPreviewTarget(null)}
+              >
+                X
+              </button>
+            </div>
+            <div className="max-h-[75vh] overflow-auto bg-[#f8faf7] p-3 sm:p-5">
+              <Image
+                src={previewTarget.url}
+                alt={previewTarget.name}
+                width={1200}
+                height={800}
+                unoptimized
+                className="mx-auto h-auto max-h-[68vh] w-auto max-w-full rounded-md border border-black/10 bg-white object-contain"
+              />
+            </div>
+            <div className="grid gap-2 border-t border-black/10 p-4 sm:grid-cols-2 sm:px-5">
+              <a
+                href={`${previewTarget.url}?download=1`}
+                download
+                className="flex h-10 items-center justify-center rounded-md bg-[#24312f] px-3 text-sm font-bold text-white transition hover:bg-[#314540]"
+              >
+                Download
+              </a>
+              <button
+                type="button"
+                className="h-10 rounded-md border border-black/10 px-3 text-sm font-bold hover:bg-[#f8faf7]"
+                onClick={() => setPreviewTarget(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmationDialog
         open={confirmOpen}

@@ -7,16 +7,30 @@ type Params = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, { params }: Params) {
+function contentTypeForFile(fileName: string) {
+  const extension = fileName.split(".").pop()?.toLowerCase();
+
+  if (extension === "png") return "image/png";
+  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+  if (extension === "gif") return "image/gif";
+  if (extension === "webp") return "image/webp";
+  if (extension === "pdf") return "application/pdf";
+
+  return "application/octet-stream";
+}
+
+export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
 
   try {
+    const requestUrl = new URL(request.url);
+    const disposition = requestUrl.searchParams.get("download") === "1" ? "attachment" : "inline";
     const auth = await getAuthContext();
     const { document, file } = await readUploadedDocumentFile(id, auth);
     return new NextResponse(file, {
       headers: {
-        "Content-Disposition": `attachment; filename="${document.name.replace(/"/g, "")}"`,
-        "Content-Type": "application/octet-stream",
+        "Content-Disposition": `${disposition}; filename="${document.name.replace(/"/g, "")}"`,
+        "Content-Type": contentTypeForFile(document.name),
       },
     });
   } catch (error) {
