@@ -173,6 +173,8 @@ After this setup, hosted users can create an account, log in, create tasks, edit
 
 If document upload shows `Bucket not found`, open Supabase **Storage** and confirm that the bucket named `student-documents` exists. If it does not exist, run [supabase/schema.sql](</E:/Student_Class_Work/my-app/supabase/schema.sql>) again in the Supabase SQL Editor, or create a private bucket named `student-documents` manually. The hosted `SUPABASE_DOCUMENT_BUCKET` environment variable must use the same bucket name.
 
+If document upload shows `new row violates row-level security policy`, run [supabase/storage-policies.sql](</E:/Student_Class_Work/my-app/supabase/storage-policies.sql>) in the Supabase SQL Editor. This creates the private `student-documents` bucket if needed and adds Storage policies that allow each logged-in user to upload, read, replace, and delete only files inside their own user folder.
+
 ## Current Status
 
 This project currently includes the pages, navigation flow, Supabase login, protected system pages, logout, Supabase task storage, Supabase document storage, and responsive layouts. The login, dashboard, tasks, documents, schedule, notification dialog, and settings screens are ready as a working hosted prototype after the Supabase SQL setup is complete.

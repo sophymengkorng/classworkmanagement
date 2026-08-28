@@ -19,3 +19,5 @@ export async function getAuthContext() {
 
   return { supabase, user };
 }
+
+export type AuthContext = NonNullable<Awaited<ReturnType<typeof getAuthContext>>>;

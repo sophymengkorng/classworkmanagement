@@ -85,7 +85,11 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
 
   function requestCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!draft.title.trim()) return;
+    if (!draft.title.trim()) {
+      setMessage("Please enter a task name before creating it.");
+      return;
+    }
+    setMessage("");
     setPendingAction({ type: "create" });
   }
 
@@ -272,8 +276,31 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
 
       {message && <p className="mt-3 text-sm font-semibold text-[#4d5a56]">{message}</p>}
 
-      <div className="mt-5 space-y-3">
-        {visibleTasks.map((task) => (
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-teal-700">Dashboard Tasks</p>
+          <h4 className="mt-1 text-lg font-bold">Latest saved tasks</h4>
+        </div>
+        {savedTasks.length > 5 && (
+          <Link
+            href="/tasks"
+            className="flex h-10 w-fit items-center justify-center rounded-md border border-black/10 px-3 text-sm font-bold hover:bg-[#f8faf7]"
+          >
+            View all tasks
+          </Link>
+        )}
+      </div>
+
+      {visibleTasks.length === 0 ? (
+        <div className="mt-4 rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-5 text-center">
+          <p className="font-bold text-[#24312f]">No tasks yet</p>
+          <p className="mt-1 text-sm leading-6 text-[#68736f]">
+            Add a task above, then it will appear here and save to your account.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {visibleTasks.map((task) => (
           <div key={task.id} className="rounded-lg border border-black/8 p-3 sm:p-4">
             {editingTaskId === task.id && editDraft ? (
               <form onSubmit={(event) => requestSaveEdit(event, task.id)} className="space-y-3">
@@ -409,8 +436,9 @@ export function DashboardTaskCreator({ initialTasks }: { initialTasks: Task[] })
               </div>
             )}
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       <ConfirmationDialog
         open={pendingAction !== null}
         title={confirmTitle()}

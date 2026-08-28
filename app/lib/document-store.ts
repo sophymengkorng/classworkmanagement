@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { DocumentRecord, documents as seedDocuments } from "../data";
-import { getAuthContext } from "./supabase/auth";
+import { AuthContext, getAuthContext } from "./supabase/auth";
 import { supabaseDocumentBucket } from "./supabase/config";
 
 const storeDirectory = path.join(process.cwd(), "data");
@@ -101,8 +101,8 @@ async function ensureStore() {
   }
 }
 
-export async function readDocuments() {
-  const auth = await getAuthContext();
+export async function readDocuments(authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -131,8 +131,8 @@ export async function readDocuments() {
   return seedDocuments;
 }
 
-export async function readDocument(id: string) {
-  const auth = await getAuthContext();
+export async function readDocument(id: string, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -153,10 +153,10 @@ export async function readDocument(id: string) {
   return documents.find((document) => document.id === id);
 }
 
-export async function saveUploadedDocument(file: File, subject: string) {
+export async function saveUploadedDocument(file: File, subject: string, authContext?: AuthContext | null) {
   validateUpload(file, subject);
 
-  const auth = await getAuthContext();
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const id = crypto.randomUUID();
@@ -208,13 +208,13 @@ export async function saveUploadedDocument(file: File, subject: string) {
   return document;
 }
 
-export async function replaceUploadedDocument(id: string, file: File, subject: string) {
+export async function replaceUploadedDocument(id: string, file: File, subject: string, authContext?: AuthContext | null) {
   validateUpload(file, subject);
 
-  const auth = await getAuthContext();
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
-    const previousDocument = await readDocument(id);
+    const previousDocument = await readDocument(id, auth);
 
     if (!previousDocument?.storageName) {
       throw new Error("Document not found.");
@@ -285,11 +285,11 @@ export async function replaceUploadedDocument(id: string, file: File, subject: s
   return document;
 }
 
-export async function readUploadedDocumentFile(id: string) {
-  const auth = await getAuthContext();
+export async function readUploadedDocumentFile(id: string, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
-    const document = await readDocument(id);
+    const document = await readDocument(id, auth);
 
     if (!document?.storageName) {
       throw new Error("Uploaded file not found.");
@@ -316,11 +316,11 @@ export async function readUploadedDocumentFile(id: string) {
   return { document, file };
 }
 
-export async function deleteDocument(id: string) {
-  const auth = await getAuthContext();
+export async function deleteDocument(id: string, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
-    const document = await readDocument(id);
+    const document = await readDocument(id, auth);
 
     if (!document) {
       throw new Error("Document not found.");

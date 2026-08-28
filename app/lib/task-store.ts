@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { Task, TaskStatus, tasks as seedTasks } from "../data";
-import { getAuthContext } from "./supabase/auth";
+import { AuthContext, getAuthContext } from "./supabase/auth";
 
 export type TaskInput = {
   title: string;
@@ -66,8 +66,8 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
   };
 }
 
-export async function readTasks() {
-  const auth = await getAuthContext();
+export async function readTasks(authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -98,8 +98,8 @@ export async function readTasks() {
   return seedTasks;
 }
 
-export async function readTask(id: string) {
-  const auth = await getAuthContext();
+export async function readTask(id: string, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -120,14 +120,14 @@ export async function readTask(id: string) {
   return currentTasks.find((task) => task.id === id);
 }
 
-export async function createTask(input: Partial<TaskInput>) {
+export async function createTask(input: Partial<TaskInput>, authContext?: AuthContext | null) {
   const normalized = normalizeTaskInput(input);
 
   if (!normalized.title || !normalized.subject || !normalized.teacher || !normalized.deadline) {
     throw new Error("Task title, subject, teacher, and deadline are required.");
   }
 
-  const auth = await getAuthContext();
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -168,8 +168,8 @@ export async function createTask(input: Partial<TaskInput>) {
   return task;
 }
 
-export async function updateTaskStatus(id: string, status: TaskStatus) {
-  const auth = await getAuthContext();
+export async function updateTaskStatus(id: string, status: TaskStatus, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase
@@ -208,11 +208,11 @@ export async function updateTaskStatus(id: string, status: TaskStatus) {
   return updatedTask;
 }
 
-export async function updateTask(id: string, input: Partial<TaskInput> & { status?: TaskStatus }) {
-  const auth = await getAuthContext();
+export async function updateTask(id: string, input: Partial<TaskInput> & { status?: TaskStatus }, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
-    const existingTask = await readTask(id);
+    const existingTask = await readTask(id, auth);
     if (!existingTask) {
       throw new Error("Task not found.");
     }
@@ -287,8 +287,8 @@ export async function updateTask(id: string, input: Partial<TaskInput> & { statu
   return updatedTask;
 }
 
-export async function deleteTask(id: string) {
-  const auth = await getAuthContext();
+export async function deleteTask(id: string, authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
 
   if (auth) {
     const { data, error } = await auth.supabase

@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { AppShell } from "../components/app-shell";
 import { DashboardNotificationsDialog } from "../components/dashboard-notifications-dialog";
-import { DashboardTaskCreator } from "../components/dashboard-task-creator";
 import { daysUntil, todaysClasses } from "../data";
 import { readDocuments } from "../lib/document-store";
-import { requireAuth } from "../lib/require-auth";
+import { requireAuthContext } from "../lib/require-auth";
 import { readTasks } from "../lib/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const user = await requireAuth();
-  const [serverTasks, documents] = await Promise.all([readTasks(), readDocuments()]);
+  const auth = await requireAuthContext();
+  const [serverTasks, documents] = await Promise.all([readTasks(auth), readDocuments(auth)]);
   const pendingTasks = serverTasks.filter((task) => task.status !== "Completed");
   const dueTomorrowTasks = pendingTasks.filter((task) => daysUntil(task.deadline) === 1);
 
@@ -22,7 +21,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={serverTasks} />} user={user}>
+    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={serverTasks} />} user={auth?.user}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -63,40 +62,48 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <div className="mt-4 sm:mt-5">
-        <DashboardTaskCreator initialTasks={serverTasks} />
-      </div>
-
       <div className="mt-4 grid gap-4 sm:mt-5 lg:grid-cols-2 lg:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm font-semibold text-teal-700">Upcoming Tasks</p>
           <div className="mt-4 space-y-3">
-            {serverTasks.slice(0, 3).map((task) => (
-              <Link key={task.id} href={`/tasks/${task.id}`} className="block rounded-lg border border-black/8 p-4 transition hover:bg-[#fbfbf8]">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                  <p className="min-w-0 break-words font-bold">{task.title}</p>
-                  <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">{task.status}</span>
-                </div>
-                <p className="mt-1 text-sm text-[#68736f]">{task.subject}</p>
-              </Link>
-            ))}
+            {serverTasks.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">
+                No tasks yet. Create your first task from the Tasks page.
+              </div>
+            ) : (
+              serverTasks.slice(0, 3).map((task) => (
+                <Link key={task.id} href={`/tasks/${task.id}`} className="block rounded-lg border border-black/8 p-4 transition hover:bg-[#fbfbf8]">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <p className="min-w-0 break-words font-bold">{task.title}</p>
+                    <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">{task.status}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-[#68736f]">{task.subject}</p>
+                </Link>
+              ))
+            )}
           </div>
         </section>
 
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm font-semibold text-teal-700">Recent Documents</p>
           <div className="mt-4 space-y-3">
-            {documents.slice(0, 3).map((document) => (
-              <div key={document.name} className="grid grid-cols-[44px_1fr] gap-3 rounded-lg border border-black/8 p-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#e8eef8] text-xs font-bold text-[#285178]">
-                  {document.type}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{document.name}</p>
-                  <p className="text-sm text-[#68736f]">{document.subject}</p>
-                </div>
+            {documents.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">
+                No documents yet. Upload class files from the Documents page.
               </div>
-            ))}
+            ) : (
+              documents.slice(0, 3).map((document) => (
+                <div key={document.name} className="grid grid-cols-[44px_1fr] gap-3 rounded-lg border border-black/8 p-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#e8eef8] text-xs font-bold text-[#285178]">
+                    {document.type}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{document.name}</p>
+                    <p className="text-sm text-[#68736f]">{document.subject}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>

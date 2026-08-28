@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../lib/auth-error";
+import { getAuthContext } from "../../lib/supabase/auth";
 import { createTask, readTasks } from "../../lib/task-store";
 
 export async function GET() {
   try {
-    const tasks = await readTasks();
+    const auth = await getAuthContext();
+    const tasks = await readTasks(auth);
     return NextResponse.json({ tasks });
   } catch (error) {
     return NextResponse.json(
@@ -16,7 +18,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const task = await createTask(await request.json());
+    const auth = await getAuthContext();
+    const task = await createTask(await request.json(), auth);
     return NextResponse.json({ task }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

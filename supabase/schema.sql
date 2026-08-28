@@ -25,6 +25,18 @@ create table if not exists public.documents (
   uploaded_at timestamptz not null default now()
 );
 
+create index if not exists tasks_user_created_at_idx
+on public.tasks (
+  user_id,
+  created_at desc
+);
+
+create index if not exists documents_user_uploaded_at_idx
+on public.documents (
+  user_id,
+  uploaded_at desc
+);
+
 grant select, insert, update, delete
 on table public.tasks
 to authenticated;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { responseStatus } from "../../../lib/auth-error";
 import { deleteTask, readTask, updateTask } from "../../../lib/task-store";
 import { TaskStatus } from "../../../data";
+import { getAuthContext } from "../../../lib/supabase/auth";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -15,7 +16,8 @@ export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
 
   try {
-    const task = await readTask(id);
+    const auth = await getAuthContext();
+    const task = await readTask(id, auth);
 
     if (!task) {
       return NextResponse.json({ message: "Task not found." }, { status: 404 });
@@ -39,7 +41,8 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   try {
-    const task = await updateTask(id, body as Parameters<typeof updateTask>[1]);
+    const auth = await getAuthContext();
+    const task = await updateTask(id, body as Parameters<typeof updateTask>[1], auth);
     return NextResponse.json({ task });
   } catch (error) {
     return NextResponse.json(
@@ -53,7 +56,8 @@ export async function DELETE(_request: Request, { params }: Params) {
   const { id } = await params;
 
   try {
-    await deleteTask(id);
+    const auth = await getAuthContext();
+    await deleteTask(id, auth);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

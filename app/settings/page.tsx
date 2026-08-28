@@ -1,13 +1,13 @@
 import { AppShell } from "../components/app-shell";
-import { requireAuth } from "../lib/require-auth";
+import { requireAuthContext } from "../lib/require-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const user = await requireAuth();
+  const auth = await requireAuthContext();
 
   return (
-    <AppShell title="Settings" eyebrow="Automation Preferences" user={user}>
+    <AppShell title="Settings" eyebrow="Automation Preferences" user={auth?.user}>
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <h3 className="text-xl font-bold">Notification Channels</h3>
