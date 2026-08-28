@@ -131,6 +131,28 @@ export async function readDocuments(authContext?: AuthContext | null) {
   return seedDocuments;
 }
 
+export async function readRecentDocuments(authContext?: AuthContext | null, limit = 3) {
+  const auth = authContext ?? await getAuthContext();
+
+  if (auth) {
+    const { data, error } = await auth.supabase
+      .from("documents")
+      .select("id,name,subject,type,size,uploaded_at,storage_path")
+      .eq("user_id", auth.user.id)
+      .order("uploaded_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`Could not read recent documents from Supabase: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => rowToDocument(row as SupabaseDocumentRow));
+  }
+
+  const documents = await readDocuments(auth);
+  return documents.slice(0, limit);
+}
+
 export async function readDocument(id: string, authContext?: AuthContext | null) {
   const auth = authContext ?? await getAuthContext();
 

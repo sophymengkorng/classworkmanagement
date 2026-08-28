@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { Task, TaskStatus, tasks as seedTasks } from "../data";
+import { Task, TaskStatus, tasks as seedTasks, today } from "../data";
 import { AuthContext, getAuthContext } from "./supabase/auth";
 
 export type TaskInput = {
@@ -63,6 +63,81 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
     deadline: input.deadline?.trim() ?? "",
     description: input.description?.trim() || "No description added yet.",
     priority: input.priority === "High" || input.priority === "Low" ? input.priority : "Medium",
+  };
+}
+
+function tomorrowDate() {
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return tomorrow.toISOString().slice(0, 10);
+}
+
+export async function readDashboardTasks(authContext?: AuthContext | null) {
+  const auth = authContext ?? await getAuthContext();
+
+  if (auth) {
+    const fields = "id,title,subject,teacher,deadline,description,status,priority";
+    const tomorrow = tomorrowDate();
+    const [recentTasksResult, pendingResult, dueTomorrowResult, notificationTasksResult] = await Promise.all([
+      auth.supabase
+        .from("tasks")
+        .select(fields)
+        .eq("user_id", auth.user.id)
+        .order("created_at", { ascending: false })
+        .limit(3),
+      auth.supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", auth.user.id)
+        .neq("status", "Completed"),
+      auth.supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", auth.user.id)
+        .neq("status", "Completed")
+        .eq("deadline", tomorrow),
+      auth.supabase
+        .from("tasks")
+        .select(fields)
+        .eq("user_id", auth.user.id)
+        .neq("status", "Completed")
+        .order("deadline", { ascending: true })
+        .limit(10),
+    ]);
+
+    if (recentTasksResult.error) {
+      throw new Error(`Could not read recent tasks from Supabase: ${recentTasksResult.error.message}`);
+    }
+
+    if (pendingResult.error) {
+      throw new Error(`Could not count pending tasks from Supabase: ${pendingResult.error.message}`);
+    }
+
+    if (dueTomorrowResult.error) {
+      throw new Error(`Could not count due-tomorrow tasks from Supabase: ${dueTomorrowResult.error.message}`);
+    }
+
+    if (notificationTasksResult.error) {
+      throw new Error(`Could not read notification tasks from Supabase: ${notificationTasksResult.error.message}`);
+    }
+
+    return {
+      recentTasks: (recentTasksResult.data ?? []).map((row) => rowToTask(row as SupabaseTaskRow)),
+      notificationTasks: (notificationTasksResult.data ?? []).map((row) => rowToTask(row as SupabaseTaskRow)),
+      pendingCount: pendingResult.count ?? 0,
+      dueTomorrowCount: dueTomorrowResult.count ?? 0,
+    };
+  }
+
+  const currentTasks = await readTasks(auth);
+  const pendingTasks = currentTasks.filter((task) => task.status !== "Completed");
+
+  return {
+    recentTasks: currentTasks.slice(0, 3),
+    notificationTasks: pendingTasks.slice(0, 10),
+    pendingCount: pendingTasks.length,
+    dueTomorrowCount: pendingTasks.filter((task) => task.deadline === tomorrowDate()).length,
   };
 }
 

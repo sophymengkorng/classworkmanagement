@@ -1,27 +1,25 @@
 import Link from "next/link";
 import { AppShell } from "../components/app-shell";
 import { DashboardNotificationsDialog } from "../components/dashboard-notifications-dialog";
-import { daysUntil, todaysClasses } from "../data";
-import { readDocuments } from "../lib/document-store";
+import { todaysClasses } from "../data";
+import { readRecentDocuments } from "../lib/document-store";
 import { requireAuthContext } from "../lib/require-auth";
-import { readTasks } from "../lib/task-store";
+import { readDashboardTasks } from "../lib/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const auth = await requireAuthContext();
-  const [serverTasks, documents] = await Promise.all([readTasks(auth), readDocuments(auth)]);
-  const pendingTasks = serverTasks.filter((task) => task.status !== "Completed");
-  const dueTomorrowTasks = pendingTasks.filter((task) => daysUntil(task.deadline) === 1);
+  const [taskData, documents] = await Promise.all([readDashboardTasks(auth), readRecentDocuments(auth)]);
 
   const stats = [
     { label: "Today's Classes", value: todaysClasses.length },
-    { label: "Pending Tasks", value: pendingTasks.length },
-    { label: "Due Tomorrow", value: dueTomorrowTasks.length },
+    { label: "Pending Tasks", value: taskData.pendingCount },
+    { label: "Due Tomorrow", value: taskData.dueTomorrowCount },
   ];
 
   return (
-    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={serverTasks} />} user={auth?.user}>
+    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={taskData.notificationTasks} />} user={auth?.user}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -66,12 +64,12 @@ export default async function DashboardPage() {
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm font-semibold text-teal-700">Upcoming Tasks</p>
           <div className="mt-4 space-y-3">
-            {serverTasks.length === 0 ? (
+            {taskData.recentTasks.length === 0 ? (
               <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">
                 No tasks yet. Create your first task from the Tasks page.
               </div>
             ) : (
-              serverTasks.slice(0, 3).map((task) => (
+              taskData.recentTasks.map((task) => (
                 <Link key={task.id} href={`/tasks/${task.id}`} className="block rounded-lg border border-black/8 p-4 transition hover:bg-[#fbfbf8]">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <p className="min-w-0 break-words font-bold">{task.title}</p>
@@ -92,7 +90,7 @@ export default async function DashboardPage() {
                 No documents yet. Upload class files from the Documents page.
               </div>
             ) : (
-              documents.slice(0, 3).map((document) => (
+              documents.map((document) => (
                 <div key={document.name} className="grid grid-cols-[44px_1fr] gap-3 rounded-lg border border-black/8 p-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#e8eef8] text-xs font-bold text-[#285178]">
                     {document.type}
