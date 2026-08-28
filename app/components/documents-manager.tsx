@@ -86,7 +86,7 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
       }
 
       setDocuments((current) => current.filter((document) => document.id !== deleteTarget.id));
-      setMessage("Document deleted from server.");
+      setMessage("Document deleted");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete document.");
@@ -189,8 +189,16 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
 
       {message && <p className="mt-3 text-sm font-semibold text-[#4d5a56]">{message}</p>}
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-        {documents.map((document) => (
+      {documents.length === 0 ? (
+        <div className="mt-5 rounded-lg border border-dashed border-black/15 bg-white p-5 text-center shadow-sm">
+          <p className="font-bold text-[#24312f]">No document yet</p>
+          <p className="mt-1 text-sm leading-6 text-[#68736f]">
+            Example: upload a Database Assignment PDF above. After saving, it will appear here and stay in your Supabase account.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {documents.map((document) => (
           <article key={document.id} className="grid gap-3 rounded-lg border border-black/8 p-3 sm:grid-cols-[52px_minmax(0,1fr)] sm:items-center sm:p-4 xl:grid-cols-[52px_minmax(0,1fr)_auto]">
             <button
               type="button"
@@ -250,8 +258,9 @@ export function DocumentsManager({ initialDocuments }: { initialDocuments: Docum
               </button>
             </div>
           </article>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {previewTarget?.url && (
         <div className="fixed inset-0 z-50 grid min-h-dvh place-items-center bg-black/55 p-4">

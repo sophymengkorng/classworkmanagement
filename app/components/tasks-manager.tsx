@@ -265,9 +265,9 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
 
       {tasks.length === 0 ? (
         <div className="rounded-lg border border-dashed border-black/15 bg-white p-5 text-center shadow-sm">
-          <p className="font-bold text-[#24312f]">No tasks yet</p>
+          <p className="font-bold text-[#24312f]">No task yet</p>
           <p className="mt-1 text-sm leading-6 text-[#68736f]">
-            Create your first assignment above. It will save to Supabase and appear here.
+            Example: create a Database Assignment above. After saving, it will appear here and stay in your Supabase account.
           </p>
         </div>
       ) : (

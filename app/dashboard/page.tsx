@@ -3,6 +3,7 @@ import { AppShell } from "../components/app-shell";
 import { DashboardHeaderActions } from "../components/dashboard-header-actions";
 import { currentDayName, getTodaysClasses } from "../data";
 import { readRecentDocuments } from "../lib/document-store";
+import { readNotificationReadIds } from "../lib/notification-store";
 import { requireAuthContext } from "../lib/require-auth";
 import { readDashboardTasks } from "../lib/task-store";
 
@@ -10,7 +11,11 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const auth = await requireAuthContext();
-  const [taskData, documents] = await Promise.all([readDashboardTasks(auth), readRecentDocuments(auth)]);
+  const [taskData, documents, readNotificationIds] = await Promise.all([
+    readDashboardTasks(auth),
+    readRecentDocuments(auth),
+    readNotificationReadIds(auth),
+  ]);
   const todaysClasses = getTodaysClasses();
   const todayLabel = currentDayName();
 
@@ -19,7 +24,7 @@ export default async function DashboardPage() {
     { label: "Pending Tasks", value: taskData.pendingCount },
     { label: "Due Tomorrow", value: taskData.dueTomorrowCount },
   ];
-  const headerAction = <DashboardHeaderActions tasks={taskData.notificationTasks} />;
+  const headerAction = <DashboardHeaderActions tasks={taskData.notificationTasks} readNotificationIds={readNotificationIds} />;
 
   return (
     <AppShell title="Welcome back" eyebrow="Dashboard" action={headerAction} user={auth?.user}>

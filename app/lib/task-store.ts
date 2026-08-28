@@ -102,6 +102,7 @@ export async function readDashboardTasks(authContext?: AuthContext | null) {
         .select(fields)
         .eq("user_id", auth.user.id)
         .neq("status", "Completed")
+        .eq("deadline", tomorrow)
         .order("deadline", { ascending: true })
         .limit(10),
     ]);
@@ -135,7 +136,7 @@ export async function readDashboardTasks(authContext?: AuthContext | null) {
 
   return {
     recentTasks: currentTasks.slice(0, 3),
-    notificationTasks: pendingTasks.slice(0, 10),
+    notificationTasks: pendingTasks.filter((task) => task.deadline === tomorrowDate()).slice(0, 10),
     pendingCount: pendingTasks.length,
     dueTomorrowCount: pendingTasks.filter((task) => task.deadline === tomorrowDate()).length,
   };

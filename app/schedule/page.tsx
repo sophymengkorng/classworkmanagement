@@ -1,18 +1,21 @@
 import { AppShell } from "../components/app-shell";
 import { DashboardHeaderActions } from "../components/dashboard-header-actions";
 import { classInfo, courseCatalog, formattedDate, schedule, semesterEvents } from "../data";
+import { readNotificationReadIds } from "../lib/notification-store";
 import { requireAuthContext } from "../lib/require-auth";
+import { readDashboardTasks } from "../lib/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage() {
   const auth = await requireAuthContext();
+  const [taskData, readNotificationIds] = await Promise.all([readDashboardTasks(auth), readNotificationReadIds(auth)]);
 
   return (
     <AppShell
       title="SW35 (E-T) Schedule"
       eyebrow={`${classInfo.school} - ${classInfo.year}, ${classInfo.semester}`}
-      action={<DashboardHeaderActions />}
+      action={<DashboardHeaderActions tasks={taskData.notificationTasks} readNotificationIds={readNotificationIds} />}
       user={auth?.user}
     >
       <section className="mb-4 rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:mb-5 sm:p-5">
