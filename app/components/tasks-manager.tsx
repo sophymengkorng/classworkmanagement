@@ -210,9 +210,6 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
             <p className="text-sm font-semibold text-teal-700">Create Task</p>
             <h3 className="mt-1 text-xl font-bold">Add a new assignment</h3>
           </div>
-          <span className="w-fit rounded-full bg-[#fff9eb] px-3 py-1.5 text-sm font-bold text-[#8a6500]">
-            Saves to Supabase
-          </span>
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-6">
