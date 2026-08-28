@@ -171,6 +171,8 @@ This creates:
 
 After this setup, hosted users can create an account, log in, create tasks, edit tasks, delete tasks, upload documents, replace documents, download documents, and delete documents with data saved in Supabase instead of local JSON files.
 
+If document upload shows `Bucket not found`, open Supabase **Storage** and confirm that the bucket named `student-documents` exists. If it does not exist, run [supabase/schema.sql](</E:/Student_Class_Work/my-app/supabase/schema.sql>) again in the Supabase SQL Editor, or create a private bucket named `student-documents` manually. The hosted `SUPABASE_DOCUMENT_BUCKET` environment variable must use the same bucket name.
+
 ## Current Status
 
 This project currently includes the pages, navigation flow, Supabase login, protected system pages, logout, Supabase task storage, Supabase document storage, and responsive layouts. The login, dashboard, tasks, documents, schedule, notification dialog, and settings screens are ready as a working hosted prototype after the Supabase SQL setup is complete.

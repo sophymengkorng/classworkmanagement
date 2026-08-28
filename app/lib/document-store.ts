@@ -56,6 +56,14 @@ function validateUpload(file: File, subject: string) {
   }
 }
 
+function storageErrorMessage(action: string, message: string) {
+  if (message.toLowerCase().includes("bucket not found")) {
+    return `${action}: Supabase Storage bucket "${supabaseDocumentBucket}" was not found. Create this bucket in Supabase Storage or run supabase/schema.sql in the Supabase SQL Editor.`;
+  }
+
+  return `${action}: ${message}`;
+}
+
 function createStorageName(id: string, fileName: string) {
   return `${id}-${Date.now()}-${sanitizeFileName(fileName)}`;
 }
@@ -161,7 +169,7 @@ export async function saveUploadedDocument(file: File, subject: string) {
     });
 
     if (uploadError) {
-      throw new Error(`Could not upload document to Supabase Storage: ${uploadError.message}`);
+      throw new Error(storageErrorMessage("Could not upload document to Supabase Storage", uploadError.message));
     }
 
     const { data, error } = await auth.supabase
@@ -221,7 +229,7 @@ export async function replaceUploadedDocument(id: string, file: File, subject: s
     });
 
     if (uploadError) {
-      throw new Error(`Could not upload replacement to Supabase Storage: ${uploadError.message}`);
+      throw new Error(storageErrorMessage("Could not upload replacement to Supabase Storage", uploadError.message));
     }
 
     const { data, error } = await auth.supabase
