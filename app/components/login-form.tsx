@@ -14,6 +14,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -161,8 +162,8 @@ export function LoginForm() {
 
         <p className="mt-2 text-sm text-[#68736f]">
           {isSignup
-            ? "Create an account to manage your classes, tasks, documents, and reminders."
-            : "Sign in to manage classes, tasks, documents, and reminders."}
+            ? "Create an account to manage your classes, Tasks, Documents, And reminders."
+            : "Sign in to manage classes, Tasks, Documents, And reminders."}
         </p>
       </div>
 
@@ -220,18 +221,28 @@ export function LoginForm() {
         Password
       </label>
 
-      <input
-        id="password"
-        className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
-        type="password"
-        value={password}
-        placeholder="Enter your password"
-        required
-        autoComplete={
-          isSignup ? "new-password" : "current-password"
-        }
-        onChange={(event) => setPassword(event.target.value)}
-      />
+      <div className="relative mt-2">
+        <input
+          id="password"
+          className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-20 text-sm outline-none ring-teal-200 transition focus:ring-2"
+          type={showPassword ? "text" : "password"}
+          value={password}
+          placeholder="Enter your password"
+          required
+          autoComplete={
+            isSignup ? "new-password" : "current-password"
+          }
+          onChange={(event) => setPassword(event.target.value)}
+        />
+        <button
+          type="button"
+          className="absolute right-2 top-1/2 h-8 -translate-y-1/2 rounded-md px-2 text-xs font-bold text-[#4d5a56] hover:bg-black/5"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          onClick={() => setShowPassword((current) => !current)}
+        >
+          {showPassword ? "Hide" : "Show"}
+        </button>
+      </div>
 
       {/* Confirm Password */}
       {isSignup && (
@@ -243,18 +254,28 @@ export function LoginForm() {
             Confirm Password
           </label>
 
-          <input
-            id="confirm-password"
-            className="mt-2 h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 text-sm outline-none ring-teal-200 transition focus:ring-2"
-            type="password"
-            value={confirmPassword}
-            placeholder="Confirm your password"
-            required
-            autoComplete="new-password"
-            onChange={(event) =>
-              setConfirmPassword(event.target.value)
-            }
-          />
+          <div className="relative mt-2">
+            <input
+              id="confirm-password"
+              className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-20 text-sm outline-none ring-teal-200 transition focus:ring-2"
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              placeholder="Confirm your password"
+              required
+              autoComplete="new-password"
+              onChange={(event) =>
+                setConfirmPassword(event.target.value)
+              }
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 h-8 -translate-y-1/2 rounded-md px-2 text-xs font-bold text-[#4d5a56] hover:bg-black/5"
+              aria-label={showPassword ? "Hide confirm password" : "Show confirm password"}
+              onClick={() => setShowPassword((current) => !current)}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
         </>
       )}
 

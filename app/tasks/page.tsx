@@ -1,4 +1,5 @@
 import { AppShell } from "../components/app-shell";
+import { DashboardHeaderActions } from "../components/dashboard-header-actions";
 import { TasksManager } from "../components/tasks-manager";
 import { requireAuthContext } from "../lib/require-auth";
 import { readTasks } from "../lib/task-store";
@@ -10,7 +11,7 @@ export default async function TasksPage() {
   const tasks = await readTasks(auth);
 
   return (
-    <AppShell title="My Tasks" eyebrow="Assignments" user={auth?.user}>
+    <AppShell title="My Tasks" eyebrow="Assignments" action={<DashboardHeaderActions tasks={tasks} />} user={auth?.user}>
       <TasksManager initialTasks={tasks} />
     </AppShell>
   );

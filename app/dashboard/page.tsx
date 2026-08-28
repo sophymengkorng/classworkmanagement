@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "../components/app-shell";
-import { DashboardNotificationsDialog } from "../components/dashboard-notifications-dialog";
-import { todaysClasses } from "../data";
+import { DashboardHeaderActions } from "../components/dashboard-header-actions";
+import { currentDayName, getTodaysClasses } from "../data";
 import { readRecentDocuments } from "../lib/document-store";
 import { requireAuthContext } from "../lib/require-auth";
 import { readDashboardTasks } from "../lib/task-store";
@@ -11,15 +11,18 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const auth = await requireAuthContext();
   const [taskData, documents] = await Promise.all([readDashboardTasks(auth), readRecentDocuments(auth)]);
+  const todaysClasses = getTodaysClasses();
+  const todayLabel = currentDayName();
 
   const stats = [
     { label: "Today's Classes", value: todaysClasses.length },
     { label: "Pending Tasks", value: taskData.pendingCount },
     { label: "Due Tomorrow", value: taskData.dueTomorrowCount },
   ];
+  const headerAction = <DashboardHeaderActions tasks={taskData.notificationTasks} />;
 
   return (
-    <AppShell title="Welcome back" eyebrow="Dashboard" action={<DashboardNotificationsDialog tasks={taskData.notificationTasks} />} user={auth?.user}>
+    <AppShell title="Welcome back" eyebrow="Dashboard" action={headerAction} user={auth?.user}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -45,17 +48,23 @@ export default async function DashboardPage() {
         </section>
 
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
-          <p className="text-sm font-semibold text-teal-700">Today&apos;s Classes</p>
+          <p className="text-sm font-semibold text-teal-700">Today&apos;s Classes - {todayLabel}</p>
           <div className="mt-4 space-y-3">
-            {todaysClasses.map((item) => (
-              <div key={`${item.time}-${item.subject}`} className="grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-lg bg-[#fbfbf8] p-3 sm:grid-cols-[110px_1fr]">
-                <span className="text-sm font-bold text-[#4d5a56]">{item.time}</span>
-                <div>
-                  <p className="font-bold">{item.subject}</p>
-                  <p className="text-sm text-[#68736f]">{item.room}</p>
-                </div>
+            {todaysClasses.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">
+                No classes scheduled for {todayLabel}.
               </div>
-            ))}
+            ) : (
+              todaysClasses.map((item) => (
+                <div key={`${item.time}-${item.subject}`} className="grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-lg bg-[#fbfbf8] p-3 sm:grid-cols-[110px_1fr]">
+                  <span className="text-sm font-bold text-[#4d5a56]">{item.time}</span>
+                  <div>
+                    <p className="font-bold">{item.subject}</p>
+                    <p className="text-sm text-[#68736f]">Room {item.room} - {item.teacher}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>

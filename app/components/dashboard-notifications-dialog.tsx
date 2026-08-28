@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { dueLabel, Task, todaysClasses } from "../data";
+import { dueLabel, getTodaysClasses, Task } from "../data";
 
 export function DashboardNotificationsDialog({ tasks }: { tasks: Task[] }) {
   const [open, setOpen] = useState(false);
 
   const notifications = useMemo(
-    () => [
-      ...tasks
+    () => {
+      const todaysClasses = getTodaysClasses();
+
+      return [
+        ...tasks
         .filter((task) => task.status !== "Completed")
         .map((task) => ({
           title: task.title,
@@ -20,7 +23,8 @@ export function DashboardNotificationsDialog({ tasks }: { tasks: Task[] }) {
         detail: "Starts at 5:45 PM",
         category: "Schedule",
       },
-    ],
+      ];
+    },
     [tasks],
   );
 
@@ -39,7 +43,7 @@ export function DashboardNotificationsDialog({ tasks }: { tasks: Task[] }) {
     <>
       <button
         type="button"
-        className="relative flex h-11 w-11 items-center justify-center rounded-md bg-[#24312f] text-lg font-bold text-white transition hover:bg-[#314540]"
+        className="relative flex h-11 w-11 items-center justify-center rounded-md bg-white text-lg font-bold text-[#1f1f1d] ring-1 ring-black/10 transition hover:bg-[#f8faf7]"
         aria-label="Open notifications"
         title="Notifications"
         onClick={() => setOpen(true)}

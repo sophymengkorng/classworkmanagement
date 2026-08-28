@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { Task, TaskStatus, tasks as seedTasks, today } from "../data";
+import { currentDateString, Task, TaskStatus, tasks as seedTasks } from "../data";
 import { AuthContext, getAuthContext } from "./supabase/auth";
 
 export type TaskInput = {
@@ -67,7 +67,7 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
 }
 
 function tomorrowDate() {
-  const tomorrow = new Date(today);
+  const tomorrow = new Date(`${currentDateString()}T00:00:00`);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   return tomorrow.toISOString().slice(0, 10);

@@ -44,7 +44,7 @@ export function ConfirmationDialog({
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             <button
               type="button"
-              className="h-11 rounded-md border border-black/10 px-4 text-sm font-bold hover:bg-[#f8faf7]"
+              className="h-11 rounded-md border border-black/15 bg-white px-4 text-sm font-bold text-[#24312f] shadow-sm hover:bg-[#f8faf7]"
               disabled={busy}
               onClick={onCancel}
             >

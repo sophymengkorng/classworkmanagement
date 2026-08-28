@@ -22,7 +22,27 @@ export type DocumentRecord = {
   url?: string;
 };
 
-export const today = new Date("2026-08-27T00:00:00");
+const appTimeZone = "Asia/Phnom_Penh";
+
+export function currentDate() {
+  return new Date();
+}
+
+export function currentDateString() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: appTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(currentDate());
+}
+
+export function currentDayName() {
+  return new Intl.DateTimeFormat("en", {
+    timeZone: appTimeZone,
+    weekday: "long",
+  }).format(currentDate());
+}
 
 export const classInfo = {
   school: "SETEC",
@@ -185,6 +205,7 @@ export const documents: DocumentRecord[] = [
 
 export function daysUntil(deadline: string) {
   const due = new Date(`${deadline}T00:00:00`);
+  const today = new Date(`${currentDateString()}T00:00:00`);
   return Math.ceil((due.getTime() - today.getTime()) / 86400000);
 }
 
@@ -205,6 +226,10 @@ export function getTask(id: string) {
   return tasks.find((task) => task.id === id);
 }
 
-export const todaysClasses = schedule.find((item) => item.day === "Thursday")?.classes ?? [];
+export function getTodaysClasses() {
+  return schedule.find((item) => item.day === currentDayName())?.classes ?? [];
+}
+
+export const todaysClasses = getTodaysClasses();
 export const pendingTasks = tasks.filter((task) => task.status !== "Completed");
 export const dueTomorrowTasks = pendingTasks.filter((task) => daysUntil(task.deadline) === 1);
