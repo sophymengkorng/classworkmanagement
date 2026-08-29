@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { TaskStatus } from "../data";
-import { ConfirmationDialog } from "./confirmation-dialog";
+import { TaskStatus } from "../../data";
+import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 
 export function TaskCompleteButton({ taskId, initialStatus }: { taskId: string; initialStatus: TaskStatus }) {
   const router = useRouter();

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "../lib/supabase/client";
-import { ConfirmationDialog } from "./confirmation-dialog";
+import { createClient } from "../../lib/supabase/client";
+import { ConfirmationDialog } from "../ui/confirmation-dialog";
 
 export function LogoutButton() {
   const router = useRouter();

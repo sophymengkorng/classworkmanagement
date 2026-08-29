@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { courseCatalog, DocumentRecord, formattedDate } from "../data";
-import { ConfirmationDialog } from "./confirmation-dialog";
+import { courseCatalog, DocumentRecord, formattedDate } from "../../data";
+import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 
 export function DocumentsManager({ initialDocuments }: { initialDocuments: DocumentRecord[] }) {
   const router = useRouter();

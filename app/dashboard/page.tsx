@@ -1,20 +1,22 @@
 import Link from "next/link";
-import { AppShell } from "../components/app-shell";
-import { DashboardHeaderActions } from "../components/dashboard-header-actions";
+import { AppShell } from "../components/layout/app-shell";
+import { DashboardHeaderActions } from "../features/dashboard/dashboard-header-actions";
 import { currentDayName, getTodaysClasses } from "../data";
-import { readRecentDocuments } from "../lib/document-store";
-import { readNotificationReadIds } from "../lib/notification-store";
+import { readRecentDocuments } from "../lib/stores/document-store";
+import { readNotificationReadIds } from "../lib/stores/notification-store";
+import { readProfile } from "../lib/stores/profile-store";
 import { requireAuthContext } from "../lib/require-auth";
-import { readDashboardTasks } from "../lib/task-store";
+import { readDashboardTasks } from "../lib/stores/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const auth = await requireAuthContext();
-  const [taskData, documents, readNotificationIds] = await Promise.all([
+  const [taskData, documents, readNotificationIds, profile] = await Promise.all([
     readDashboardTasks(auth),
     readRecentDocuments(auth),
     readNotificationReadIds(auth),
+    readProfile(auth),
   ]);
   const todaysClasses = getTodaysClasses();
   const todayLabel = currentDayName();
@@ -27,7 +29,7 @@ export default async function DashboardPage() {
   const headerAction = <DashboardHeaderActions tasks={taskData.notificationTasks} readNotificationIds={readNotificationIds} />;
 
   return (
-    <AppShell title="Welcome back" eyebrow="Dashboard" action={headerAction} user={auth?.user}>
+    <AppShell title="Welcome back" eyebrow="Dashboard" action={headerAction} user={auth?.user} profile={profile}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -76,7 +78,12 @@ export default async function DashboardPage() {
 
       <div className="mt-4 grid gap-4 sm:mt-5 lg:grid-cols-2 lg:gap-5">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
-          <p className="text-sm font-semibold text-teal-700">Upcoming Tasks</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-teal-700">Upcoming Tasks</p>
+            <Link href="/tasks" className="text-sm font-bold text-[#24312f] hover:text-teal-700">
+              View all
+            </Link>
+          </div>
           <div className="mt-4 space-y-3">
             {taskData.recentTasks.length === 0 ? (
               <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">
@@ -97,7 +104,12 @@ export default async function DashboardPage() {
         </section>
 
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
-          <p className="text-sm font-semibold text-teal-700">Recent Documents</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-teal-700">Recent Documents</p>
+            <Link href="/documents" className="text-sm font-bold text-[#24312f] hover:text-teal-700">
+              View all
+            </Link>
+          </div>
           <div className="mt-4 space-y-3">
             {documents.length === 0 ? (
               <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-sm font-semibold text-[#68736f]">

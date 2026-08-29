@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../../lib/auth-error";
-import { deleteTask, readTask, updateTask } from "../../../lib/task-store";
+import { deleteTask, readTask, updateTask } from "../../../lib/stores/task-store";
 import { TaskStatus } from "../../../data";
 import { getAuthContext } from "../../../lib/supabase/auth";
 

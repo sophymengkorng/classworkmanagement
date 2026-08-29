@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../lib/auth-error";
 import { getAuthContext } from "../../lib/supabase/auth";
-import { createTask, readTasks } from "../../lib/task-store";
+import { createTask, readTasks } from "../../lib/stores/task-store";
 
 export async function GET() {
   try {

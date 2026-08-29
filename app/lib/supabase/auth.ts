@@ -2,13 +2,10 @@ import { AuthRequiredError } from "../auth-error";
 import { isSupabaseConfigured } from "./config";
 import { createClient as createSupabaseServerClient } from "./server";
 
-type AuthenticatedUser = {
+type AuthUser = {
   id: string;
   email?: string | null;
-  user_metadata?: {
-    full_name?: string;
-    name?: string;
-  };
+  user_metadata?: Record<string, unknown>;
 };
 
 export async function getAuthContext() {
@@ -19,24 +16,12 @@ export async function getAuthContext() {
 
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const claims = claimsData?.claims;
-  const userId = typeof claims?.sub === "string" ? claims.sub : "";
 
-  if (!claimsError && claims && userId) {
-    const metadata = claims.user_metadata;
-    const fullName = typeof metadata === "object" && metadata && "full_name" in metadata
-      ? String(metadata.full_name)
-      : undefined;
-    const name = typeof metadata === "object" && metadata && "name" in metadata
-      ? String(metadata.name)
-      : undefined;
-
-    const user: AuthenticatedUser = {
-      id: userId,
+  if (!claimsError && typeof claims?.sub === "string") {
+    const user: AuthUser = {
+      id: claims.sub,
       email: typeof claims.email === "string" ? claims.email : null,
-      user_metadata: {
-        full_name: fullName,
-        name,
-      },
+      user_metadata: typeof claims.user_metadata === "object" && claims.user_metadata ? claims.user_metadata as Record<string, unknown> : {},
     };
 
     return { supabase, user };

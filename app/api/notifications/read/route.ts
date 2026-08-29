@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../../lib/auth-error";
-import { markNotificationRead } from "../../../lib/notification-store";
+import { markNotificationRead } from "../../../lib/stores/notification-store";
 import { getAuthContext } from "../../../lib/supabase/auth";
 
 export async function POST(request: Request) {

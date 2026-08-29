@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShell } from "../../components/app-shell";
-import { TaskCompleteButton } from "../../components/task-complete-button";
+import { AppShell } from "../../components/layout/app-shell";
+import { TaskCompleteButton } from "../../features/tasks/task-complete-button";
 import { dueLabel, formattedDate } from "../../data";
+import { readProfile } from "../../lib/stores/profile-store";
 import { requireAuthContext } from "../../lib/require-auth";
-import { readTask } from "../../lib/task-store";
+import { readTask } from "../../lib/stores/task-store";
 
 export const dynamic = "force-dynamic";
 
@@ -40,12 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TaskDetailPage({ params }: Props) {
   const auth = await requireAuthContext();
   const { id } = await params;
-  const task = await readTask(id, auth);
+  const [task, profile] = await Promise.all([readTask(id, auth), readProfile(auth)]);
 
   if (!task) notFound();
 
   return (
-    <AppShell title={task.title} eyebrow="Task Detail" user={auth?.user}>
+    <AppShell title={task.title} eyebrow="Task Detail" user={auth?.user} profile={profile}>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:p-5">
           <Link href="/tasks" className="text-sm font-bold text-teal-700 hover:text-teal-900">

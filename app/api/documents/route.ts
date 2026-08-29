@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../lib/auth-error";
-import { readDocuments, saveUploadedDocument } from "../../lib/document-store";
+import { readDocuments, saveUploadedDocument } from "../../lib/stores/document-store";
 import { getAuthContext } from "../../lib/supabase/auth";
 
 export async function GET() {

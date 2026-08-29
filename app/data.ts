@@ -125,84 +125,6 @@ export const semesterEvents = [
   { label: "New Semester", date: "2027-01-11" },
 ];
 
-export const tasks: Task[] = [
-  {
-    id: "1",
-    title: "NET II Assignment",
-    subject: "NET II",
-    teacher: "OUDOM",
-    deadline: "2026-08-28",
-    description: "Review network concepts from class and submit the assigned exercise.",
-    status: "Pending",
-    priority: "High",
-  },
-  {
-    id: "2",
-    title: "DSM Practical Work",
-    subject: "DSM",
-    teacher: "ROTH",
-    deadline: "2026-08-30",
-    description: "Complete the practical exercise and prepare notes for the next DSM class.",
-    status: "In progress",
-    priority: "Medium",
-  },
-  {
-    id: "3",
-    title: "WD III Page Design",
-    subject: "WD III",
-    teacher: "PIN",
-    deadline: "2026-09-02",
-    description: "Create a responsive web page using clean HTML structure and CSS layout.",
-    status: "Pending",
-    priority: "Medium",
-  },
-  {
-    id: "4",
-    title: "C# III Exercise",
-    subject: "C# III",
-    teacher: "PHARA",
-    deadline: "2026-09-05",
-    description: "Complete the C# exercise and test the program before submission.",
-    status: "Completed",
-    priority: "Low",
-  },
-];
-
-export const documents: DocumentRecord[] = [
-  {
-    id: "sample-1",
-    name: "NET_II_Assignment.pdf",
-    subject: "NET II",
-    type: "PDF",
-    size: "2.4 MB",
-    uploadedAt: "2026-08-27",
-  },
-  {
-    id: "sample-2",
-    name: "DSM_Practical_Work.pdf",
-    subject: "DSM",
-    type: "PDF",
-    size: "880 KB",
-    uploadedAt: "2026-08-27",
-  },
-  {
-    id: "sample-3",
-    name: "WD_III_Page_Design.docx",
-    subject: "WD III",
-    type: "DOCX",
-    size: "1.1 MB",
-    uploadedAt: "2026-08-27",
-  },
-  {
-    id: "sample-4",
-    name: "CSharp_III_Exercise.zip",
-    subject: "C# III",
-    type: "ZIP",
-    size: "3.6 MB",
-    uploadedAt: "2026-08-27",
-  },
-];
-
 export function daysUntil(deadline: string) {
   const due = new Date(`${deadline}T00:00:00`);
   const today = new Date(`${currentDateString()}T00:00:00`);
@@ -222,14 +144,6 @@ export function formattedDate(deadline: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
-export function getTask(id: string) {
-  return tasks.find((task) => task.id === id);
-}
-
 export function getTodaysClasses() {
   return schedule.find((item) => item.day === currentDayName())?.classes ?? [];
 }
-
-export const todaysClasses = getTodaysClasses();
-export const pendingTasks = tasks.filter((task) => task.status !== "Completed");
-export const dueTomorrowTasks = pendingTasks.filter((task) => daysUntil(task.deadline) === 1);

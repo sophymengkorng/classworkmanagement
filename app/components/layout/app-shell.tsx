@@ -1,19 +1,25 @@
-import Link from "next/link";
 import { ReactNode } from "react";
-import { currentDayName } from "../data";
+import { currentDayName } from "../../data";
+import { UserProfile } from "../../lib/stores/profile-store";
 import { AppShellNav } from "./app-shell-nav";
 import { LogoutButton } from "./logout-button";
+import { ProfileButton } from "../../features/profile/profile-button";
 
 type ShellUser = {
   email?: string | null;
   user_metadata?: {
     full_name?: string;
     name?: string;
+    nickname?: string;
+    avatar_url?: string;
+    avatar_path?: string;
   };
 };
 
-function userDisplayName(user?: ShellUser | null) {
-  const metadataName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+function userDisplayName(user?: ShellUser | null, profile?: UserProfile | null) {
+  if (profile?.displayName) return profile.displayName;
+
+  const metadataName = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.user_metadata?.name;
   const emailName = user?.email?.split("@")[0];
 
   return metadataName || emailName || "Student";
@@ -34,14 +40,16 @@ export function AppShell({
   eyebrow,
   action,
   user,
+  profile,
 }: {
   children: ReactNode;
   title: string;
   eyebrow?: string;
   action?: ReactNode;
   user?: ShellUser | null;
+  profile?: UserProfile | null;
 }) {
-  const displayName = userDisplayName(user);
+  const displayName = userDisplayName(user, profile);
   const initials = userInitials(displayName);
   const defaultEyebrow = currentDayName();
 
@@ -49,16 +57,7 @@ export function AppShell({
     <main className="min-h-screen overflow-x-hidden bg-[#f6f4ee] text-[#1d2026]">
       <div className="grid min-h-screen lg:grid-cols-[260px_1fr]">
         <aside className="border-b border-black/10 bg-[#24312f] px-4 py-4 text-white sm:px-5 lg:border-b-0 lg:border-r lg:border-white/10 lg:py-6">
-          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Student profile dashboard">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-[#24312f] ring-2 ring-white/20">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-teal-100">Student Assistant</p>
-              <h1 className="mt-0.5 truncate text-base font-semibold leading-tight">{displayName}</h1>
-              {user?.email && <p className="mt-0.5 truncate text-[11px] font-medium text-white/62">{user.email}</p>}
-            </div>
-          </Link>
+          <ProfileButton user={user} profile={profile} displayName={displayName} initials={initials} />
 
           <AppShellNav />
 

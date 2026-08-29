@@ -1,15 +1,16 @@
-import { AppShell } from "../components/app-shell";
-import { DashboardHeaderActions } from "../components/dashboard-header-actions";
+import { AppShell } from "../components/layout/app-shell";
+import { DashboardHeaderActions } from "../features/dashboard/dashboard-header-actions";
 import { classInfo, courseCatalog, formattedDate, schedule, semesterEvents } from "../data";
-import { readNotificationReadIds } from "../lib/notification-store";
+import { readNotificationReadIds } from "../lib/stores/notification-store";
+import { readProfile } from "../lib/stores/profile-store";
 import { requireAuthContext } from "../lib/require-auth";
-import { readDashboardTasks } from "../lib/task-store";
+import { readDashboardTasks } from "../lib/stores/task-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage() {
   const auth = await requireAuthContext();
-  const [taskData, readNotificationIds] = await Promise.all([readDashboardTasks(auth), readNotificationReadIds(auth)]);
+  const [taskData, readNotificationIds, profile] = await Promise.all([readDashboardTasks(auth), readNotificationReadIds(auth), readProfile(auth)]);
 
   return (
     <AppShell
@@ -17,6 +18,7 @@ export default async function SchedulePage() {
       eyebrow={`${classInfo.school} - ${classInfo.year}, ${classInfo.semester}`}
       action={<DashboardHeaderActions tasks={taskData.notificationTasks} readNotificationIds={readNotificationIds} />}
       user={auth?.user}
+      profile={profile}
     >
       <section className="mb-4 rounded-lg border border-black/10 bg-white p-4 shadow-sm sm:mb-5 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">

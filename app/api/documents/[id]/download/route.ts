@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { responseStatus } from "../../../../lib/auth-error";
-import { readUploadedDocumentFile } from "../../../../lib/document-store";
+import { readUploadedDocumentFile } from "../../../../lib/stores/document-store";
 import { getAuthContext } from "../../../../lib/supabase/auth";
 
 type Params = {

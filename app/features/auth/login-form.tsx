@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../lib/supabase/client";
-import { siteUrl } from "../lib/supabase/config";
+import { createClient } from "../../lib/supabase/client";
+import { siteUrl } from "../../lib/supabase/config";
 
 type AuthMode = "login" | "signup";
 

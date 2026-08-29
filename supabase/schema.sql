@@ -34,6 +34,21 @@ create table if not exists public.notification_reads (
   unique(user_id, notification_id)
 );
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  display_name text,
+  student_id text,
+  phone text,
+  class_name text,
+  year text,
+  semester text,
+  avatar_url text,
+  avatar_path text,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
 create index if not exists tasks_user_created_at_idx
 on public.tasks (
   user_id,
@@ -52,6 +67,11 @@ on public.notification_reads (
   created_at desc
 );
 
+create index if not exists profiles_updated_at_idx
+on public.profiles (
+  updated_at desc
+);
+
 grant select, insert, update, delete
 on table public.tasks
 to authenticated;
@@ -64,11 +84,17 @@ grant select, insert, update, delete
 on table public.notification_reads
 to authenticated;
 
+grant select, insert, update, delete
+on table public.profiles
+to authenticated;
+
 alter table public.tasks enable row level security;
 
 alter table public.documents enable row level security;
 
 alter table public.notification_reads enable row level security;
+
+alter table public.profiles enable row level security;
 
 drop policy if exists "Users can read their own tasks"
 on public.tasks;
@@ -211,6 +237,42 @@ using (
   auth.uid() = user_id
 );
 
+drop policy if exists "Users can read own profile"
+on public.profiles;
+
+create policy "Users can read own profile"
+on public.profiles
+for select
+to authenticated
+using (
+  auth.uid() = id
+);
+
+drop policy if exists "Users can create own profile"
+on public.profiles;
+
+create policy "Users can create own profile"
+on public.profiles
+for insert
+to authenticated
+with check (
+  auth.uid() = id
+);
+
+drop policy if exists "Users can update own profile"
+on public.profiles;
+
+create policy "Users can update own profile"
+on public.profiles
+for update
+to authenticated
+using (
+  auth.uid() = id
+)
+with check (
+  auth.uid() = id
+);
+
 insert into storage.buckets (
   id,
   name,
@@ -272,5 +334,57 @@ for delete
 to authenticated
 using (
   bucket_id = 'student-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+insert into storage.buckets (
+  id,
+  name,
+  public
+)
+values (
+  'student-avatars',
+  'student-avatars',
+  true
+)
+on conflict (id) do nothing;
+
+drop policy if exists "Users can upload their own avatars"
+on storage.objects;
+
+create policy "Users can upload their own avatars"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'student-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Users can update their own avatars"
+on storage.objects;
+
+create policy "Users can update their own avatars"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'student-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'student-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Users can delete their own avatars"
+on storage.objects;
+
+create policy "Users can delete their own avatars"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'student-avatars'
   and (storage.foldername(name))[1] = auth.uid()::text
 );

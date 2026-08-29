@@ -1,6 +1,6 @@
-import { Task } from "../data";
-import { DashboardNotificationsDialog } from "./dashboard-notifications-dialog";
-import { DashboardSettingsDialog } from "./dashboard-settings-dialog";
+import { Task } from "../../data";
+import { DashboardNotificationsDialog } from "../notifications/notifications-dropdown";
+import { DashboardSettingsDialog } from "../settings/settings-dialog";
 
 export function DashboardHeaderActions({ tasks = [], readNotificationIds = [] }: { tasks?: Task[]; readNotificationIds?: string[] }) {
   return (

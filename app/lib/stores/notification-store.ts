@@ -1,5 +1,5 @@
-import { AuthRequiredError } from "./auth-error";
-import { AuthContext, getAuthContext } from "./supabase/auth";
+import { AuthRequiredError } from "../auth-error";
+import { AuthContext, getAuthContext } from "../supabase/auth";
 
 type NotificationReadRow = {
   notification_id: string;

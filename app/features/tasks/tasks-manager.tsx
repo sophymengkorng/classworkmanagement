@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { courseCatalog, dueLabel, formattedDate, Task } from "../data";
-import { ConfirmationDialog } from "./confirmation-dialog";
+import { courseCatalog, dueLabel, formattedDate, Task } from "../../data";
+import { ConfirmationDialog } from "../../components/ui/confirmation-dialog";
 
 type EditableTask = Pick<Task, "title" | "subject" | "teacher" | "deadline" | "description" | "priority" | "status">;
 type DraftTask = Pick<Task, "title" | "subject" | "teacher" | "deadline" | "description" | "priority">;
