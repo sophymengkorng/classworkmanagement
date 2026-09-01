@@ -110,6 +110,22 @@ grant select, insert, update, delete
 on table public.deadline_alerts
 to authenticated;
 
+grant select, insert, update, delete
+on table public.tasks
+to service_role;
+
+grant select, insert, update, delete
+on table public.profiles
+to service_role;
+
+grant select, insert, update, delete
+on table public.deadline_alerts
+to service_role;
+
+grant usage
+on schema public
+to service_role;
+
 alter table public.tasks enable row level security;
 
 alter table public.documents enable row level security;
