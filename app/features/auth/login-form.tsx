@@ -7,6 +7,35 @@ import { siteUrl } from "../../lib/supabase/config";
 
 type AuthMode = "login" | "signup";
 
+function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      {visible ? (
+        <>
+          <path d="M3 3l18 18" />
+          <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+          <path d="M9.9 5.2A9.8 9.8 0 0 1 12 5c5 0 8.5 4.2 10 7a16.8 16.8 0 0 1-3.1 4" />
+          <path d="M6.6 6.6A16 16 0 0 0 2 12c1.5 2.8 5 7 10 7a9.7 9.7 0 0 0 4.1-.9" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
@@ -224,7 +253,7 @@ export function LoginForm() {
       <div className="relative mt-2">
         <input
           id="password"
-          className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-20 text-sm outline-none ring-teal-200 transition focus:ring-2"
+          className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-12 text-sm outline-none ring-teal-200 transition focus:ring-2"
           type={showPassword ? "text" : "password"}
           value={password}
           placeholder="Enter your password"
@@ -236,11 +265,11 @@ export function LoginForm() {
         />
         <button
           type="button"
-          className="absolute right-2 top-1/2 h-8 -translate-y-1/2 rounded-md px-2 text-xs font-bold text-[#4d5a56] hover:bg-black/5"
+          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#4d5a56] hover:bg-black/5"
           aria-label={showPassword ? "Hide password" : "Show password"}
           onClick={() => setShowPassword((current) => !current)}
         >
-          {showPassword ? "Hide" : "Show"}
+          <PasswordVisibilityIcon visible={showPassword} />
         </button>
       </div>
 
@@ -257,7 +286,7 @@ export function LoginForm() {
           <div className="relative mt-2">
             <input
               id="confirm-password"
-              className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-20 text-sm outline-none ring-teal-200 transition focus:ring-2"
+              className="h-12 w-full rounded-md border border-black/10 bg-[#fbfbf8] px-3 pr-12 text-sm outline-none ring-teal-200 transition focus:ring-2"
               type={showPassword ? "text" : "password"}
               value={confirmPassword}
               placeholder="Confirm your password"
@@ -269,11 +298,11 @@ export function LoginForm() {
             />
             <button
               type="button"
-              className="absolute right-2 top-1/2 h-8 -translate-y-1/2 rounded-md px-2 text-xs font-bold text-[#4d5a56] hover:bg-black/5"
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#4d5a56] hover:bg-black/5"
               aria-label={showPassword ? "Hide confirm password" : "Show confirm password"}
               onClick={() => setShowPassword((current) => !current)}
             >
-              {showPassword ? "Hide" : "Show"}
+              <PasswordVisibilityIcon visible={showPassword} />
             </button>
           </div>
         </>
