@@ -32,15 +32,16 @@ function isAuthorized(request: NextRequest) {
 }
 
 function alertMessage(task: TaskAlertRow, profile?: ProfileAlertRow) {
-  const name = profile?.display_name ? `${profile.display_name}, ` : "";
+  const owner = profile?.display_name ? `Student: ${profile.display_name}` : "";
 
   return [
-    `Hi ${name}your task is due tomorrow.`,
+    "Deadline reminder: task is due tomorrow.",
     "",
     `Task: ${task.title}`,
     `Subject: ${task.subject}`,
     `Teacher: ${task.teacher}`,
     `Deadline: ${task.deadline}`,
+    owner,
   ].join("\n");
 }
 
@@ -119,11 +120,12 @@ export async function GET(request: NextRequest) {
   for (const task of tasks) {
     const profile = profiles.get(task.user_id);
     const message = alertMessage(task, profile);
+    const telegramChatId = profile?.telegram_chat_id || "";
 
-    if (profile?.telegram_chat_id) {
+    if (telegramChatId) {
       try {
         if (!(await wasAlertSent(supabase, task.user_id, task.id, "telegram"))) {
-          await sendTelegramMessage(profile.telegram_chat_id, message);
+          await sendTelegramMessage(telegramChatId, message);
           await markAlertSent(supabase, task.user_id, task.id, "telegram");
           telegramSent += 1;
         }

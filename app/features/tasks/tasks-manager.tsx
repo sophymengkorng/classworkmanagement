@@ -10,14 +10,25 @@ type EditableTask = Pick<Task, "title" | "subject" | "teacher" | "deadline" | "d
 type DraftTask = Pick<Task, "title" | "subject" | "teacher" | "deadline" | "description" | "priority">;
 type PendingAction = { type: "create" } | { type: "save"; taskId: string } | { type: "delete"; taskId: string } | null;
 
-const defaultCreateDraft: DraftTask = {
-  title: "",
-  subject: "NET II",
-  teacher: "OUDOM",
-  deadline: "2026-09-01",
-  description: "",
-  priority: "Medium",
-};
+function todayInputDate() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Phnom_Penh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function defaultCreateDraft(): DraftTask {
+  return {
+    title: "",
+    subject: "NET II",
+    teacher: "OUDOM",
+    deadline: todayInputDate(),
+    description: "",
+    priority: "Medium",
+  };
+}
 
 function statusClass(status: string) {
   if (status === "Completed") return "bg-emerald-100 text-emerald-700";
@@ -40,7 +51,7 @@ function taskToEditable(task: Task): EditableTask {
 export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
   const router = useRouter();
   const [tasks, setTasks] = useState(initialTasks);
-  const [createDraft, setCreateDraft] = useState<DraftTask>(defaultCreateDraft);
+  const [createDraft, setCreateDraft] = useState<DraftTask>(() => defaultCreateDraft());
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditableTask | null>(null);
@@ -104,7 +115,7 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
       }
 
       setTasks((current) => [result.task as Task, ...current]);
-      setCreateDraft((current) => ({ ...defaultCreateDraft, subject: current.subject, teacher: current.teacher }));
+      setCreateDraft((current) => ({ ...defaultCreateDraft(), subject: current.subject, teacher: current.teacher }));
       setMessage("Task created and saved to Supabase database.");
       router.refresh();
     } catch (error) {
@@ -170,7 +181,7 @@ export function TasksManager({ initialTasks }: { initialTasks: Task[] }) {
         setEditingId(null);
         setDraft(null);
       }
-      setMessage("Task deleted from server.");
+      setMessage("Task deleted.");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not delete task.");

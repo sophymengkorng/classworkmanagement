@@ -48,10 +48,20 @@ function normalizeTaskInput(input: Partial<TaskInput>): TaskInput {
   };
 }
 
+function ensureCurrentOrUpcomingDeadline(deadline: string) {
+  if (deadline < currentDateString()) {
+    throw new Error("Deadline must be today or an upcoming date.");
+  }
+}
+
 function tomorrowDate() {
   const tomorrow = new Date(`${currentDateString()}T00:00:00`);
   tomorrow.setDate(tomorrow.getDate() + 1);
   return tomorrow.toISOString().slice(0, 10);
+}
+
+function todayDate() {
+  return currentDateString();
 }
 
 async function requireTaskAuth(authContext?: AuthContext | null) {
@@ -62,19 +72,23 @@ async function requireTaskAuth(authContext?: AuthContext | null) {
 
 export async function readDashboardTasks(authContext?: AuthContext | null) {
   const auth = await requireTaskAuth(authContext);
+  const today = todayDate();
   const tomorrow = tomorrowDate();
   const [recentTasksResult, pendingResult, dueTomorrowResult, notificationTasksResult] = await Promise.all([
     auth.supabase
       .from("tasks")
       .select(taskFields)
       .eq("user_id", auth.user.id)
-      .order("created_at", { ascending: false })
+      .neq("status", "Completed")
+      .gte("deadline", today)
+      .order("deadline", { ascending: true })
       .limit(3),
     auth.supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("user_id", auth.user.id)
-      .neq("status", "Completed"),
+      .neq("status", "Completed")
+      .gte("deadline", today),
     auth.supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -121,6 +135,8 @@ export async function readTasks(authContext?: AuthContext | null) {
     .from("tasks")
     .select(taskFields)
     .eq("user_id", auth.user.id)
+    .gte("deadline", todayDate())
+    .order("deadline", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -152,6 +168,8 @@ export async function createTask(input: Partial<TaskInput>, authContext?: AuthCo
   if (!normalized.title || !normalized.subject || !normalized.teacher || !normalized.deadline) {
     throw new Error("Task title, subject, teacher, and deadline are required.");
   }
+
+  ensureCurrentOrUpcomingDeadline(normalized.deadline);
 
   const auth = await requireTaskAuth(authContext);
   const { data, error } = await auth.supabase
@@ -217,6 +235,8 @@ export async function updateTask(id: string, input: Partial<TaskInput> & { statu
   if (!normalized.title || !normalized.subject || !normalized.teacher || !normalized.deadline) {
     throw new Error("Task title, subject, teacher, and deadline are required.");
   }
+
+  ensureCurrentOrUpcomingDeadline(normalized.deadline);
 
   const { data, error } = await auth.supabase
     .from("tasks")
