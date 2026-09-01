@@ -8,34 +8,52 @@ type NotificationItem = {
   title: string;
   detail: string;
   category: string;
+  message: string;
 };
 
 export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks: Task[]; initialReadIds: string[] }) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [readIds, setReadIds] = useState<string[]>(initialReadIds);
+  const [readError, setReadError] = useState("");
 
   const notifications = useMemo<NotificationItem[]>(
     () =>
       tasks
-        .filter((task) => task.status !== "Completed" && daysUntil(task.deadline) === 1)
-        .map((task) => ({
-          id: `task-${task.id}-${task.deadline}`,
-          title: task.title,
-          detail: dueLabel(task.deadline),
-          category: "Assignment",
-        })),
+        .filter((task) => {
+          const days = daysUntil(task.deadline);
+          return task.status !== "Completed" && days >= 0 && days <= 1;
+        })
+        .map((task) => {
+          const label = dueLabel(task.deadline);
+
+          return {
+            id: `task-${task.id}-${task.deadline}`,
+            title: task.title,
+            detail: label,
+            category: "Assignment",
+            message: `${task.title} is ${label.toLowerCase()}. Subject: ${task.subject}. Teacher: ${task.teacher}. Please finish it before the deadline.`,
+          };
+        }),
     [tasks],
   );
 
-  const unreadCount = notifications.filter((notification) => !readIds.includes(notification.id)).length;
+  const unreadNotifications = useMemo(
+    () => notifications.filter((notification) => !readIds.includes(notification.id)),
+    [notifications, readIds],
+  );
+  const unreadCount = unreadNotifications.length;
 
   useEffect(() => {
     if (!open) return;
 
     function closeDropdown(event: KeyboardEvent | MouseEvent) {
       if (event instanceof KeyboardEvent) {
-        if (event.key === "Escape") setOpen(false);
+        if (event.key === "Escape") {
+          setExpandedId(null);
+          setOpen(false);
+        }
         return;
       }
 
@@ -55,6 +73,7 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
   async function markAsRead(id: string) {
     if (readIds.includes(id)) return;
 
+    setReadError("");
     setReadIds((current) => {
       if (current.includes(id)) return current;
       return [...current, id];
@@ -69,11 +88,17 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
       });
 
       if (!response.ok) {
-        throw new Error("Could not save notification read status.");
+        const result = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(result?.message ?? "Could not save notification read status.");
       }
-    } catch {
-      setReadIds((current) => current.filter((readId) => readId !== id));
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Could not save notification read status.");
     }
+  }
+
+  function openNotification(notification: NotificationItem) {
+    setExpandedId((current) => (current === notification.id ? null : notification.id));
+    void markAsRead(notification.id);
   }
 
   return (
@@ -119,6 +144,12 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
           </div>
 
           <div className="max-h-[65vh] space-y-3 overflow-y-auto p-4">
+            {readError && (
+              <p className="rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                {readError}
+              </p>
+            )}
+
             {notifications.length === 0 ? (
               <div className="rounded-lg border border-dashed border-black/15 bg-[#fbfbf8] p-4 text-center">
                 <p className="font-bold text-[#24312f]">No deadline notification</p>
@@ -129,6 +160,7 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
             ) : (
               notifications.map((notification) => {
                 const isRead = readIds.includes(notification.id);
+                const isExpanded = expandedId === notification.id;
 
                 return (
                   <button
@@ -139,7 +171,7 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
                     }`}
                     role="menuitem"
                     onClick={() => {
-                      void markAsRead(notification.id);
+                      openNotification(notification);
                     }}
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -154,6 +186,11 @@ export function DashboardNotificationsDialog({ tasks, initialReadIds }: { tasks:
                       </div>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-[#4d5a56]">{notification.detail}</p>
+                    {isExpanded && (
+                      <p className="mt-3 rounded-md bg-white px-3 py-2 text-sm font-semibold leading-6 text-[#4d5a56]">
+                        {notification.message}
+                      </p>
+                    )}
                   </button>
                 );
               })

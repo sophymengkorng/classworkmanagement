@@ -32,16 +32,15 @@ function isAuthorized(request: NextRequest) {
 }
 
 function alertMessage(task: TaskAlertRow, profile?: ProfileAlertRow) {
-  const owner = profile?.display_name ? `Student: ${profile.display_name}` : "";
+  const name = profile?.display_name?.trim() || "Student";
 
   return [
-    "Deadline reminder: task is due tomorrow.",
+    `Hi ${name}, your task is due tomorrow.`,
     "",
     `Task: ${task.title}`,
     `Subject: ${task.subject}`,
     `Teacher: ${task.teacher}`,
     `Deadline: ${task.deadline}`,
-    owner,
   ].join("\n");
 }
 
@@ -86,6 +85,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const tomorrow = cambodiaDateString(1);
+  const forceSend = request.nextUrl.searchParams.get("force") === "true";
 
   const { data: taskRows, error: taskError } = await supabase
     .from("tasks")
@@ -113,7 +113,9 @@ export async function GET(request: NextRequest) {
 
   const profiles = new Map((profileRows ?? []).map((profile) => [(profile as ProfileAlertRow).id, profile as ProfileAlertRow]));
   let telegramSent = 0;
+  let telegramAlreadySent = 0;
   let gmailSent = 0;
+  let gmailAlreadySent = 0;
   let skipped = 0;
   const errors: string[] = [];
 
@@ -124,7 +126,10 @@ export async function GET(request: NextRequest) {
 
     if (telegramChatId) {
       try {
-        if (!(await wasAlertSent(supabase, task.user_id, task.id, "telegram"))) {
+        const alreadySent = !forceSend && await wasAlertSent(supabase, task.user_id, task.id, "telegram");
+        if (alreadySent) {
+          telegramAlreadySent += 1;
+        } else {
           await sendTelegramMessage(telegramChatId, message);
           await markAlertSent(supabase, task.user_id, task.id, "telegram");
           telegramSent += 1;
@@ -138,7 +143,10 @@ export async function GET(request: NextRequest) {
 
     if (profile?.email) {
       try {
-        if (!(await wasAlertSent(supabase, task.user_id, task.id, "gmail"))) {
+        const alreadySent = !forceSend && await wasAlertSent(supabase, task.user_id, task.id, "gmail");
+        if (alreadySent) {
+          gmailAlreadySent += 1;
+        } else {
           const result = await sendGmailMessage(profile.email, `Task due tomorrow: ${task.title}`, message);
           if (!result.skipped) {
             await markAlertSent(supabase, task.user_id, task.id, "gmail");
@@ -157,7 +165,9 @@ export async function GET(request: NextRequest) {
     checkedDate: tomorrow,
     tasks: tasks.length,
     telegramSent,
+    telegramAlreadySent,
     gmailSent,
+    gmailAlreadySent,
     skipped,
     errors,
   });
